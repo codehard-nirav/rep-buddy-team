@@ -9,38 +9,236 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedRoutinesIndexRouteImport } from './routes/_authenticated/routines.index'
+import { Route as AuthenticatedProgramsIndexRouteImport } from './routes/_authenticated/programs.index'
+import { Route as AuthenticatedExercisesIndexRouteImport } from './routes/_authenticated/exercises.index'
+import { Route as AuthenticatedWorkoutNewRouteImport } from './routes/_authenticated/workout.new'
+import { Route as AuthenticatedRoutinesIdRouteImport } from './routes/_authenticated/routines.$id'
+import { Route as AuthenticatedProgramsIdRouteImport } from './routes/_authenticated/programs.$id'
+import { Route as AuthenticatedExercisesNewRouteImport } from './routes/_authenticated/exercises.new'
+import { Route as AuthenticatedExercisesIdRouteImport } from './routes/_authenticated/exercises.$id'
+import { Route as AuthenticatedWorkoutIdIndexRouteImport } from './routes/_authenticated/workout.$id.index'
+import { Route as AuthenticatedWorkoutIdLogRouteImport } from './routes/_authenticated/workout.$id.log'
 
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedRoutinesIndexRoute =
+  AuthenticatedRoutinesIndexRouteImport.update({
+    id: '/routines/',
+    path: '/routines/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedProgramsIndexRoute =
+  AuthenticatedProgramsIndexRouteImport.update({
+    id: '/programs/',
+    path: '/programs/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedExercisesIndexRoute =
+  AuthenticatedExercisesIndexRouteImport.update({
+    id: '/exercises/',
+    path: '/exercises/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedWorkoutNewRoute = AuthenticatedWorkoutNewRouteImport.update({
+  id: '/workout/new',
+  path: '/workout/new',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedRoutinesIdRoute = AuthenticatedRoutinesIdRouteImport.update({
+  id: '/routines/$id',
+  path: '/routines/$id',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedProgramsIdRoute = AuthenticatedProgramsIdRouteImport.update({
+  id: '/programs/$id',
+  path: '/programs/$id',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedExercisesNewRoute =
+  AuthenticatedExercisesNewRouteImport.update({
+    id: '/exercises/new',
+    path: '/exercises/new',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedExercisesIdRoute =
+  AuthenticatedExercisesIdRouteImport.update({
+    id: '/exercises/$id',
+    path: '/exercises/$id',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedWorkoutIdIndexRoute =
+  AuthenticatedWorkoutIdIndexRouteImport.update({
+    id: '/workout/$id/',
+    path: '/workout/$id/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedWorkoutIdLogRoute =
+  AuthenticatedWorkoutIdLogRouteImport.update({
+    id: '/workout/$id/log',
+    path: '/workout/$id/log',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/onboarding': typeof OnboardingRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/exercises/$id': typeof AuthenticatedExercisesIdRoute
+  '/exercises/new': typeof AuthenticatedExercisesNewRoute
+  '/programs/$id': typeof AuthenticatedProgramsIdRoute
+  '/routines/$id': typeof AuthenticatedRoutinesIdRoute
+  '/workout/new': typeof AuthenticatedWorkoutNewRoute
+  '/exercises/': typeof AuthenticatedExercisesIndexRoute
+  '/programs/': typeof AuthenticatedProgramsIndexRoute
+  '/routines/': typeof AuthenticatedRoutinesIndexRoute
+  '/workout/$id/log': typeof AuthenticatedWorkoutIdLogRoute
+  '/workout/$id/': typeof AuthenticatedWorkoutIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/onboarding': typeof OnboardingRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/exercises/$id': typeof AuthenticatedExercisesIdRoute
+  '/exercises/new': typeof AuthenticatedExercisesNewRoute
+  '/programs/$id': typeof AuthenticatedProgramsIdRoute
+  '/routines/$id': typeof AuthenticatedRoutinesIdRoute
+  '/workout/new': typeof AuthenticatedWorkoutNewRoute
+  '/exercises': typeof AuthenticatedExercisesIndexRoute
+  '/programs': typeof AuthenticatedProgramsIndexRoute
+  '/routines': typeof AuthenticatedRoutinesIndexRoute
+  '/workout/$id/log': typeof AuthenticatedWorkoutIdLogRoute
+  '/workout/$id': typeof AuthenticatedWorkoutIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/onboarding': typeof OnboardingRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/exercises/$id': typeof AuthenticatedExercisesIdRoute
+  '/_authenticated/exercises/new': typeof AuthenticatedExercisesNewRoute
+  '/_authenticated/programs/$id': typeof AuthenticatedProgramsIdRoute
+  '/_authenticated/routines/$id': typeof AuthenticatedRoutinesIdRoute
+  '/_authenticated/workout/new': typeof AuthenticatedWorkoutNewRoute
+  '/_authenticated/exercises/': typeof AuthenticatedExercisesIndexRoute
+  '/_authenticated/programs/': typeof AuthenticatedProgramsIndexRoute
+  '/_authenticated/routines/': typeof AuthenticatedRoutinesIndexRoute
+  '/_authenticated/workout/$id/log': typeof AuthenticatedWorkoutIdLogRoute
+  '/_authenticated/workout/$id/': typeof AuthenticatedWorkoutIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/onboarding'
+    | '/dashboard'
+    | '/exercises/$id'
+    | '/exercises/new'
+    | '/programs/$id'
+    | '/routines/$id'
+    | '/workout/new'
+    | '/exercises/'
+    | '/programs/'
+    | '/routines/'
+    | '/workout/$id/log'
+    | '/workout/$id/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/onboarding'
+    | '/dashboard'
+    | '/exercises/$id'
+    | '/exercises/new'
+    | '/programs/$id'
+    | '/routines/$id'
+    | '/workout/new'
+    | '/exercises'
+    | '/programs'
+    | '/routines'
+    | '/workout/$id/log'
+    | '/workout/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/onboarding'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/exercises/$id'
+    | '/_authenticated/exercises/new'
+    | '/_authenticated/programs/$id'
+    | '/_authenticated/routines/$id'
+    | '/_authenticated/workout/new'
+    | '/_authenticated/exercises/'
+    | '/_authenticated/programs/'
+    | '/_authenticated/routines/'
+    | '/_authenticated/workout/$id/log'
+    | '/_authenticated/workout/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  OnboardingRoute: typeof OnboardingRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +246,124 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/routines/': {
+      id: '/_authenticated/routines/'
+      path: '/routines'
+      fullPath: '/routines/'
+      preLoaderRoute: typeof AuthenticatedRoutinesIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/programs/': {
+      id: '/_authenticated/programs/'
+      path: '/programs'
+      fullPath: '/programs/'
+      preLoaderRoute: typeof AuthenticatedProgramsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/exercises/': {
+      id: '/_authenticated/exercises/'
+      path: '/exercises'
+      fullPath: '/exercises/'
+      preLoaderRoute: typeof AuthenticatedExercisesIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/workout/new': {
+      id: '/_authenticated/workout/new'
+      path: '/workout/new'
+      fullPath: '/workout/new'
+      preLoaderRoute: typeof AuthenticatedWorkoutNewRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/routines/$id': {
+      id: '/_authenticated/routines/$id'
+      path: '/routines/$id'
+      fullPath: '/routines/$id'
+      preLoaderRoute: typeof AuthenticatedRoutinesIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/programs/$id': {
+      id: '/_authenticated/programs/$id'
+      path: '/programs/$id'
+      fullPath: '/programs/$id'
+      preLoaderRoute: typeof AuthenticatedProgramsIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/exercises/new': {
+      id: '/_authenticated/exercises/new'
+      path: '/exercises/new'
+      fullPath: '/exercises/new'
+      preLoaderRoute: typeof AuthenticatedExercisesNewRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/exercises/$id': {
+      id: '/_authenticated/exercises/$id'
+      path: '/exercises/$id'
+      fullPath: '/exercises/$id'
+      preLoaderRoute: typeof AuthenticatedExercisesIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/workout/$id/': {
+      id: '/_authenticated/workout/$id/'
+      path: '/workout/$id'
+      fullPath: '/workout/$id/'
+      preLoaderRoute: typeof AuthenticatedWorkoutIdIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/workout/$id/log': {
+      id: '/_authenticated/workout/$id/log'
+      path: '/workout/$id/log'
+      fullPath: '/workout/$id/log'
+      preLoaderRoute: typeof AuthenticatedWorkoutIdLogRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
+interface AuthenticatedRouteChildren {
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedExercisesIdRoute: typeof AuthenticatedExercisesIdRoute
+  AuthenticatedExercisesNewRoute: typeof AuthenticatedExercisesNewRoute
+  AuthenticatedProgramsIdRoute: typeof AuthenticatedProgramsIdRoute
+  AuthenticatedRoutinesIdRoute: typeof AuthenticatedRoutinesIdRoute
+  AuthenticatedWorkoutNewRoute: typeof AuthenticatedWorkoutNewRoute
+  AuthenticatedExercisesIndexRoute: typeof AuthenticatedExercisesIndexRoute
+  AuthenticatedProgramsIndexRoute: typeof AuthenticatedProgramsIndexRoute
+  AuthenticatedRoutinesIndexRoute: typeof AuthenticatedRoutinesIndexRoute
+  AuthenticatedWorkoutIdLogRoute: typeof AuthenticatedWorkoutIdLogRoute
+  AuthenticatedWorkoutIdIndexRoute: typeof AuthenticatedWorkoutIdIndexRoute
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedExercisesIdRoute: AuthenticatedExercisesIdRoute,
+  AuthenticatedExercisesNewRoute: AuthenticatedExercisesNewRoute,
+  AuthenticatedProgramsIdRoute: AuthenticatedProgramsIdRoute,
+  AuthenticatedRoutinesIdRoute: AuthenticatedRoutinesIdRoute,
+  AuthenticatedWorkoutNewRoute: AuthenticatedWorkoutNewRoute,
+  AuthenticatedExercisesIndexRoute: AuthenticatedExercisesIndexRoute,
+  AuthenticatedProgramsIndexRoute: AuthenticatedProgramsIndexRoute,
+  AuthenticatedRoutinesIndexRoute: AuthenticatedRoutinesIndexRoute,
+  AuthenticatedWorkoutIdLogRoute: AuthenticatedWorkoutIdLogRoute,
+  AuthenticatedWorkoutIdIndexRoute: AuthenticatedWorkoutIdIndexRoute,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  AuthRoute: AuthRoute,
+  OnboardingRoute: OnboardingRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
