@@ -33,7 +33,7 @@ completes the full lifecycle **Audit → Design → ADR → Implementation → T
 | 1 | Foundation (docs, standards, errors, logging) | ✅ Complete |
 | 2 | Security (RLS audit, Zod, rate limit, threat model) | ✅ Complete |
 | 3 | Architecture (services, repositories, loaders) | ✅ Complete |
-| 4 | Database (indexes, query optimization) | ⏳ Pending |
+| 4 | Database (indexes, query optimization) | ✅ Complete |
 | 5 | Observability (Sentry / monitoring / alerting) | ⏳ Pending |
 | 6 | Testing (unit / integration / RLS) | ⏳ Pending |
 | 7 | Final production audit | ⏳ Pending |
