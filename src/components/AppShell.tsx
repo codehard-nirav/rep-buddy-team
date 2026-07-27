@@ -1,4 +1,4 @@
-import { Link, useRouter } from "@tanstack/react-router";
+import { Link, useRouter, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   Home,
@@ -51,9 +51,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     },
   });
 
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   useEffect(() => {
     setOpen(false);
-  }, [router.state.location.pathname]);
+  }, [pathname]);
 
   async function signOut() {
     await qc.cancelQueries();
