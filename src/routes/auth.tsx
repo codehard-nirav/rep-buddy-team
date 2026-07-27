@@ -34,9 +34,17 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) nav({ to: search.redirect ?? "/dashboard", replace: true });
+      if (!cancelled && data.session) nav({ to: search.redirect ?? "/dashboard", replace: true });
     });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) nav({ to: search.redirect ?? "/dashboard", replace: true });
+    });
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
   }, [nav, search.redirect]);
 
   async function handleSubmit(e: React.FormEvent) {
