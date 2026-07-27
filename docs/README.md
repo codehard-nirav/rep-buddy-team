@@ -30,8 +30,8 @@ completes the full lifecycle **Audit → Design → ADR → Implementation → T
 
 | # | Workstream | Status |
 |---|------------|--------|
-| 1 | Foundation (docs, standards, errors, logging) | ✅ In progress |
-| 2 | Security (RLS audit, Zod, rate limit) | ⏳ Pending |
+| 1 | Foundation (docs, standards, errors, logging) | ✅ Complete |
+| 2 | Security (RLS audit, Zod, rate limit, threat model) | ✅ Complete |
 | 3 | Architecture (services, repositories, loaders) | ⏳ Pending |
 | 4 | Database (indexes, query optimization) | ⏳ Pending |
 | 5 | Observability (Sentry / monitoring / alerting) | ⏳ Pending |
