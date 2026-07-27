@@ -29,11 +29,7 @@ export const withRequestLogger = createMiddleware({ type: "function" }).server(
     })();
     const headerId = req?.headers?.get("x-correlation-id") ?? undefined;
     const correlationId = headerId || newCorrelationId();
-    const userId = (globalThis as any).__gymigo_userId as string | undefined;
-    const log: Logger = logger.child({
-      correlationId,
-      ...(userId ? { userId } : {}),
-    });
+    const log: Logger = logger.child({ correlationId });
     const start = Date.now();
     log.debug("serverfn.started");
     try {
