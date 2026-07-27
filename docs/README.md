@@ -36,7 +36,7 @@ completes the full lifecycle **Audit → Design → ADR → Implementation → T
 | 4 | Database (indexes, query optimization) | ✅ Complete |
 | 5 | Observability (structured logging + correlation IDs) | ✅ Complete |
 | 6 | Testing (unit / RLS docs) | ✅ Complete |
-| 7 | Final production audit | ⏳ Pending |
+| 7 | Final production audit | ✅ Complete → [`production-audit.md`](production-audit.md) |
 
 ## Entry Points
 
