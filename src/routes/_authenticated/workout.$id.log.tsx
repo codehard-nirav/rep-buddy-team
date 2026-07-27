@@ -301,16 +301,17 @@ function RunningTimer({ startedAt }: { startedAt?: string | null }) {
   );
 }
 
-function RestTimer() {
+function RestTimer({ defaultSeconds = 90 }: { defaultSeconds?: number }) {
   const [remaining, setRemaining] = useState(0);
   useEffect(() => {
     if (remaining <= 0) return;
     const t = setInterval(() => setRemaining((r) => r - 1), 1000);
     return () => clearInterval(t);
   }, [remaining]);
+  const presets = Array.from(new Set([defaultSeconds, 60, 90, 120, 180])).slice(0, 4);
   return (
     <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-10 flex gap-2">
-      {[60, 90, 120, 180].map((s) => (
+      {presets.map((s) => (
         <button
           key={s}
           onClick={() => setRemaining(s)}
