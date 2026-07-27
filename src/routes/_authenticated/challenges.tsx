@@ -34,9 +34,9 @@ function Challenges() {
         .gte("started_at", monthStart.toISOString());
       const byUser: Record<string, { count: number; volume: number; profile: any }> = {};
       (workouts ?? []).forEach((w: any) => {
-        const u = byUser[w.user_id] ??= { count: 0, volume: 0, profile: w.profiles };
-        u.count += 1;
-        u.volume += Number(w.total_volume ?? 0);
+        const agg = byUser[w.user_id] ??= { count: 0, volume: 0, profile: w.profiles };
+        agg.count += 1;
+        agg.volume += Number(w.total_volume ?? 0);
       });
       return Object.entries(byUser)
         .map(([id, v]) => ({ id, ...v }))

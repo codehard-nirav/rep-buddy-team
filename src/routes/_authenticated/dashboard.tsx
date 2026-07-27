@@ -92,7 +92,7 @@ function Dashboard() {
                       <p className="font-medium">{w.name ?? "Workout"}</p>
                       <p className="text-xs text-muted-foreground">{new Date(w.started_at).toLocaleDateString()}</p>
                     </div>
-                    <span className="text-sm text-muted-foreground">{Math.round(Number(w.total_volume ?? 0))} kg vol</span>
+                    <span className="text-sm text-muted-foreground">{Math.round(Number(w.total_volume ?? 0))} {units} vol</span>
                   </Link>
                 </li>
               ))}

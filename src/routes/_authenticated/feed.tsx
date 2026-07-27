@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Heart, MessageCircle, Clock, Weight } from "lucide-react";
 import { toast } from "sonner";
+import { useUnits } from "@/lib/use-units";
 
 export const Route = createFileRoute("/_authenticated/feed")({
   head: () => ({
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/_authenticated/feed")({
 
 function Feed() {
   const qc = useQueryClient();
+  const units = useUnits();
   const { data } = useQuery({
     queryKey: ["feed"],
     queryFn: async () => {
@@ -72,7 +74,7 @@ function Feed() {
                 <p className="font-medium mb-2">{w.name ?? "Workout"}</p>
                 <div className="flex gap-4 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {Math.round((w.duration_seconds ?? 0) / 60)}m</span>
-                  <span className="flex items-center gap-1"><Weight className="w-3 h-3" /> {Math.round(Number(w.total_volume ?? 0))} kg</span>
+                  <span className="flex items-center gap-1"><Weight className="w-3 h-3" /> {Math.round(Number(w.total_volume ?? 0))} {units}</span>
                 </div>
               </Link>
               <div className="flex gap-2 mt-3 pt-3 border-t border-border">
@@ -87,7 +89,7 @@ function Feed() {
           );
         })}
         {data?.workouts.length === 0 && (
-          <p className="text-sm text-muted-foreground">Follow other athletes to fill your feed.</p>
+          <p className="text-sm text-muted-foreground">Nothing here yet. Finish a workout, or follow other athletes to fill your feed.</p>
         )}
       </div>
     </div>
