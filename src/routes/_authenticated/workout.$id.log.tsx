@@ -148,13 +148,21 @@ function LogWorkout() {
   }
 
   async function finish() {
-    // Compute volume + PRs
-    const totalVolume = (sets ?? []).reduce((sum: number, s: any) => sum + Number(s.weight ?? 0) * Number(s.reps ?? 0), 0);
-    // PR = max weight * reps for each exercise in this session > previous max
+    // Flush any focused NumInput so its onBlur commits first.
+    if (typeof document !== "undefined" && document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    // Refetch fresh sets to include the just-committed edit.
+    const { data: freshSets } = await supabase
+      .from("workout_sets")
+      .select("id, exercise_id, weight, reps")
+      .eq("workout_id", id);
+    const finalSets = freshSets ?? sets ?? [];
+    const totalVolume = finalSets.reduce((sum: number, s: any) => sum + Number(s.weight ?? 0) * Number(s.reps ?? 0), 0);
     const { data: u } = await supabase.auth.getUser();
     if (u.user) {
       const byEx: Record<string, { max: number; set_id: string }> = {};
-      (sets ?? []).forEach((s: any) => {
+      finalSets.forEach((s: any) => {
         const load = Number(s.weight ?? 0);
         if (!byEx[s.exercise_id] || load > byEx[s.exercise_id].max) {
           byEx[s.exercise_id] = { max: load, set_id: s.id };
@@ -163,16 +171,16 @@ function LogWorkout() {
       for (const [exId, info] of Object.entries(byEx)) {
         const { data: prev } = await supabase
           .from("workout_sets")
-          .select("weight, workouts!inner(user_id, finished_at)")
+          .select("weight, workouts!inner(user_id, finished_at, id)")
           .eq("exercise_id", exId)
           .eq("workouts.user_id", u.user.id)
           .not("workouts.finished_at", "is", null)
+          .neq("workouts.id", id)
           .order("weight", { ascending: false })
           .limit(1)
           .maybeSingle();
-        if (!prev || Number(prev.weight ?? 0) < info.max) {
-          await supabase.from("workout_sets").update({ is_pr: true }).eq("id", info.set_id);
-        }
+        const isPr = !prev || Number(prev.weight ?? 0) < info.max;
+        await supabase.from("workout_sets").update({ is_pr: isPr }).eq("id", info.set_id);
       }
     }
     const started = workout?.started_at ? new Date(workout.started_at).getTime() : Date.now();
@@ -236,7 +244,7 @@ function LogWorkout() {
             {g.sets.map((s: any, i: number) => (
               <div key={s.id} className="grid grid-cols-[auto_1fr_1fr_1fr_auto] gap-2 items-center py-1">
                 <span className="w-6 text-center text-sm font-semibold">{i + 1}</span>
-                <NumInput value={s.weight} onCommit={(v) => updateSet(s.id, { weight: v })} placeholder="kg" />
+                <NumInput value={s.weight} onCommit={(v) => updateSet(s.id, { weight: v })} placeholder={units} />
                 <NumInput value={s.reps} onCommit={(v) => updateSet(s.id, { reps: v })} placeholder="reps" />
                 <NumInput value={s.rpe} onCommit={(v) => updateSet(s.id, { rpe: v })} placeholder="RPE" step={0.5} />
                 <button onClick={() => deleteSet(s.id)} className="p-1 text-muted-foreground hover:text-destructive">
