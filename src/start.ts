@@ -2,6 +2,23 @@ import { createStart, createCsrfMiddleware, createMiddleware } from "@tanstack/r
 
 import { renderErrorPage } from "./lib/error-page";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
+import { logger, newCorrelationId } from "./lib/logger";
+import { toAppError } from "./lib/errors";
+
+// Assign a correlation ID to every server request and log its lifecycle.
+const correlationMiddleware = createMiddleware().server(async ({ next }) => {
+  const correlationId = newCorrelationId();
+  const start = Date.now();
+  try {
+    const res = await next();
+    logger.info("request.completed", { correlationId, durationMs: Date.now() - start });
+    return res;
+  } catch (error) {
+    const err = toAppError(error);
+    logger.error("request.failed", err, { correlationId, durationMs: Date.now() - start });
+    throw error;
+  }
+});
 
 const errorMiddleware = createMiddleware().server(async ({ next }) => {
   try {
@@ -27,5 +44,5 @@ const csrfMiddleware = createCsrfMiddleware({
 
 export const startInstance = createStart(() => ({
   functionMiddleware: [attachSupabaseAuth],
-  requestMiddleware: [errorMiddleware, csrfMiddleware],
+  requestMiddleware: [correlationMiddleware, errorMiddleware, csrfMiddleware],
 }));
