@@ -269,7 +269,7 @@ function LogWorkout() {
         <Plus className="w-5 h-5" /> Add exercise
       </button>
 
-      <RestTimer />
+      <RestTimer defaultSeconds={me?.restTimer ?? 90} />
 
       {pickerOpen && (
         <ExercisePicker
