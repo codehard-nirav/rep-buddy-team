@@ -1,5 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { Dumbbell, Zap, Users, BarChart3, ArrowRight } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -21,6 +23,20 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
+  const nav = useNavigate();
+  useEffect(() => {
+    let cancelled = false;
+    supabase.auth.getSession().then(({ data }) => {
+      if (!cancelled && data.session) nav({ to: "/dashboard", replace: true });
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) nav({ to: "/dashboard", replace: true });
+    });
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
+  }, [nav]);
   return (
     <div className="min-h-screen bg-gradient-hero">
       <header className="max-w-6xl mx-auto flex items-center justify-between p-6">
