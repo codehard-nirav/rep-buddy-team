@@ -1,15 +1,19 @@
 # Monitoring & Alerting
 
-Status: **Planned** — Sentry deferred per Workstream 1 scope. Structured
-logging landed first so future monitoring has a stable event vocabulary.
+Status: **Logging-only** — per Workstream 5 scope, external APM (Sentry/OTel)
+is intentionally deferred. Structured JSON events + correlation IDs are the
+single source of truth; downstream aggregation happens in the log pipeline.
 
 ## Current State
 
+- Every request stamped with a correlation ID in `src/start.ts`.
+- Every authenticated server function binds `context.log` +
+  `context.correlationId` via `withRequestLogger`.
 - Errors flow through `logger.error` + `reportLovableError` (editor telemetry).
 - `src/lib/error-capture.ts` recovers stacks from h3-swallowed SSR errors.
 - `src/lib/error-page.ts` renders a static 500 page.
 
-## Planned (Workstream 5)
+## Future (out of scope for W5)
 
 | Signal | Tool | Alert |
 |--------|------|-------|
