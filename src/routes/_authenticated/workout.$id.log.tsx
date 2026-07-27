@@ -1,10 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Plus, X, Timer, Check, Trash2, Search } from "lucide-react";
 import { z } from "zod";
+import { useUnits } from "@/lib/use-units";
 
 const searchSchema = z.object({
   add: z.string().optional(),
@@ -21,6 +22,19 @@ function LogWorkout() {
   const search = Route.useSearch();
   const nav = useNavigate();
   const qc = useQueryClient();
+  const units = useUnits();
+
+  const { data: me } = useQuery({
+    queryKey: ["me-log-profile"],
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return null;
+      const { data } = await supabase.from("profiles").select("rest_timer_seconds").eq("id", u.user.id).maybeSingle();
+      return { userId: u.user.id, restTimer: data?.rest_timer_seconds ?? 90 };
+    },
+    staleTime: 60_000,
+  });
+
 
   const { data: workout } = useQuery({
     queryKey: ["workout", id],
@@ -53,14 +67,18 @@ function LogWorkout() {
   }, [sets]);
 
   const [pickerOpen, setPickerOpen] = useState(false);
+  const bootstrappedRef = useRef<string | null>(null);
 
-  // Auto-add exercise from ?add= or routine load
+  // Auto-add exercise from ?add= or routine load — run at most once per workout id.
   useEffect(() => {
+    if (!search.add && !search.routine) return;
+    if (bootstrappedRef.current === id) return;
+    bootstrappedRef.current = id;
     async function bootstrap() {
       if (search.add) {
         await addExercise(search.add, false);
-        nav({ to: "/workout/$id/log", params: { id }, search: {}, replace: true });
-      } else if (search.routine && grouped.length === 0) {
+        qc.invalidateQueries({ queryKey: ["workout-sets", id] });
+      } else if (search.routine) {
         const { data: rex } = await supabase
           .from("routine_exercises")
           .select("*")
@@ -70,12 +88,13 @@ function LogWorkout() {
           await addExercise(r.exercise_id, false);
         }
         qc.invalidateQueries({ queryKey: ["workout-sets", id] });
-        nav({ to: "/workout/$id/log", params: { id }, search: {}, replace: true });
       }
+      nav({ to: "/workout/$id/log", params: { id }, search: {}, replace: true });
     }
     void bootstrap();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search.add, search.routine]);
+  }, [id, search.add, search.routine]);
+
 
   async function addExercise(exId: string, invalidate = true) {
     // Fetch previous set for autofill
