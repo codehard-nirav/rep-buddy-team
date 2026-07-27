@@ -60,9 +60,10 @@ export function checkRateLimit(
 export function assertRateLimit(key: string, opts: RateLimitOptions): void {
   const result = checkRateLimit(key, opts);
   if (!result.allowed) {
-    throw new RateLimitError("Too many requests. Please slow down.", {
-      context: { retryAfterMs: result.retryAfterMs, key },
-    });
+    throw new RateLimitError(
+      "Too many requests. Please slow down.",
+      Math.ceil(result.retryAfterMs / 1000),
+    );
   }
 }
 
