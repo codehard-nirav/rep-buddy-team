@@ -37,15 +37,28 @@ function Coach() {
   async function invite(e: React.FormEvent) {
     e.preventDefault();
     if (!data?.meId || !inviteEmail.trim()) return;
-    // Find user by email via profiles (only their own row visible). Use auth.users? Not accessible.
-    // Fallback: match by username or store invited_email for later pairing.
-    const { data: match } = await supabase.from("profiles").select("id").eq("username", inviteEmail.replace("@", "").split(".")[0]).maybeSingle();
+    const uname = inviteEmail.trim().replace(/^@/, "");
+    const { data: match } = await supabase.from("profiles").select("id").eq("username", uname).maybeSingle();
     const clientId = match?.id;
     if (!clientId) {
       toast.error("Client not found. They need to sign up and share their @username first.");
       return;
     }
-    const { error } = await supabase.from("coach_clients").insert({ coach_id: data.meId, client_id: clientId, invited_email: inviteEmail, status: "pending" } as any);
+    if (clientId === data.meId) {
+      toast.error("You can't invite yourself.");
+      return;
+    }
+    const { data: existing } = await supabase
+      .from("coach_clients")
+      .select("id, status")
+      .eq("coach_id", data.meId)
+      .eq("client_id", clientId)
+      .maybeSingle();
+    if (existing) {
+      toast.error(`Already ${existing.status}.`);
+      return;
+    }
+    const { error } = await supabase.from("coach_clients").insert({ coach_id: data.meId, client_id: clientId, invited_email: uname, status: "pending" } as any);
     if (error) return toast.error(error.message);
     toast.success("Invite sent");
     setInviteEmail("");

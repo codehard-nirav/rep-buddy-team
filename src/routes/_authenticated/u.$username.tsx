@@ -12,7 +12,7 @@ function UserProfile() {
   const { username } = Route.useParams();
   const qc = useQueryClient();
 
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["profile-by-username", username],
     queryFn: async () => {
       const { data: u } = await supabase.auth.getUser();
@@ -23,7 +23,7 @@ function UserProfile() {
         const { data: p2 } = await supabase.from("profiles").select("*").eq("id", username).maybeSingle();
         p = p2;
       }
-      if (!p) return null;
+      if (!p) return { profile: null, meId } as const;
       const [{ count: workoutCount }, { data: follows }] = await Promise.all([
         supabase.from("workouts").select("id", { count: "exact", head: true }).eq("user_id", p.id).not("finished_at", "is", null),
         supabase.from("follows").select("follower_id, followed_id"),
@@ -31,7 +31,7 @@ function UserProfile() {
       const followers = (follows ?? []).filter((f: any) => f.followed_id === p.id).length;
       const followingCount = (follows ?? []).filter((f: any) => f.follower_id === p.id).length;
       const iFollow = !!(meId && (follows ?? []).find((f: any) => f.follower_id === meId && f.followed_id === p.id));
-      return { profile: p, workoutCount: workoutCount ?? 0, followers, followingCount, iFollow, meId, isMe: meId === p.id };
+      return { profile: p, workoutCount: workoutCount ?? 0, followers, followingCount, iFollow, meId, isMe: meId === p.id } as const;
     },
   });
 
@@ -46,8 +46,16 @@ function UserProfile() {
     qc.invalidateQueries({ queryKey: ["profile-by-username", username] });
   }
 
-  if (!data) return <div className="p-8">Loading…</div>;
-  const { profile, workoutCount, followers, followingCount, iFollow, isMe } = data;
+  if (isLoading || !data) return <div className="p-8 text-muted-foreground">Loading…</div>;
+  if (!data.profile) {
+    return (
+      <div className="max-w-3xl mx-auto p-8 text-center">
+        <h1 className="text-2xl font-extrabold mb-2">Profile not found</h1>
+        <p className="text-sm text-muted-foreground">No athlete matches @{username}.</p>
+      </div>
+    );
+  }
+  const { profile, workoutCount = 0, followers = 0, followingCount = 0, iFollow = false, isMe = false } = data;
 
   return (
     <div className="max-w-3xl mx-auto p-4 md:p-8">

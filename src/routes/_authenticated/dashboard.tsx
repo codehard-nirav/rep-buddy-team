@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Flame, Trophy, TrendingUp, Calendar as CalendarIcon, Plus } from "lucide-react";
 import { useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { useUnits } from "@/lib/use-units";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -19,6 +20,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 function Dashboard() {
   const nav = useNavigate();
+  const units = useUnits();
   const { data: profile } = useQuery({
     queryKey: ["profile-me"],
     queryFn: async () => {
@@ -38,13 +40,15 @@ function Dashboard() {
     queryFn: async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return null;
-      const [{ count: total }, { data: recent }] = await Promise.all([
+      const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+      const [{ count: total }, { count: weekCount }, { data: recent }, { data: streakRows }] = await Promise.all([
         supabase.from("workouts").select("id", { count: "exact", head: true }).eq("user_id", u.user.id).not("finished_at", "is", null),
+        supabase.from("workouts").select("id", { count: "exact", head: true }).eq("user_id", u.user.id).not("finished_at", "is", null).gte("started_at", weekAgo),
         supabase.from("workouts").select("id, name, started_at, finished_at, total_volume").eq("user_id", u.user.id).not("finished_at", "is", null).order("started_at", { ascending: false }).limit(5),
+        supabase.from("workouts").select("started_at").eq("user_id", u.user.id).not("finished_at", "is", null).order("started_at", { ascending: false }).limit(60),
       ]);
-      const streak = calcStreak((recent ?? []).map((w) => new Date(w.started_at)));
-      const week = (recent ?? []).filter((w) => Date.now() - new Date(w.started_at).getTime() < 7 * 86400000).length;
-      return { total: total ?? 0, streak, week, recent: recent ?? [] };
+      const streak = calcStreak((streakRows ?? []).map((w) => new Date(w.started_at)));
+      return { total: total ?? 0, streak, week: weekCount ?? 0, recent: recent ?? [] };
     },
   });
 
@@ -88,7 +92,7 @@ function Dashboard() {
                       <p className="font-medium">{w.name ?? "Workout"}</p>
                       <p className="text-xs text-muted-foreground">{new Date(w.started_at).toLocaleDateString()}</p>
                     </div>
-                    <span className="text-sm text-muted-foreground">{Math.round(Number(w.total_volume ?? 0))} kg vol</span>
+                    <span className="text-sm text-muted-foreground">{Math.round(Number(w.total_volume ?? 0))} {units} vol</span>
                   </Link>
                 </li>
               ))}

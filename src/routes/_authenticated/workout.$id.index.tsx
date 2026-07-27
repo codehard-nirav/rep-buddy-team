@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Trophy, Clock, Weight, ArrowLeft, MessageCircle, Heart } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useUnits } from "@/lib/use-units";
 
 export const Route = createFileRoute("/_authenticated/workout/$id/")({
   component: WorkoutDetail,
@@ -11,6 +12,7 @@ export const Route = createFileRoute("/_authenticated/workout/$id/")({
 
 function WorkoutDetail() {
   const { id } = Route.useParams();
+  const units = useUnits();
   const { data: workout } = useQuery({
     queryKey: ["workout-full", id],
     queryFn: async () => {
@@ -72,7 +74,7 @@ function WorkoutDetail() {
 
         <div className="grid grid-cols-3 gap-3 mt-6">
           <Stat icon={Clock} label="Duration" value={fmtDur(workout.duration_seconds)} />
-          <Stat icon={Weight} label="Volume" value={`${Math.round(Number(workout.total_volume ?? 0))} kg`} />
+          <Stat icon={Weight} label="Volume" value={`${Math.round(Number(workout.total_volume ?? 0))} ${units}`} />
           <Stat icon={Trophy} label="PRs" value={String(prs)} />
         </div>
       </div>
@@ -86,7 +88,7 @@ function WorkoutDetail() {
               {sets.map((s: any, i: number) => (
                 <div key={s.id} className="flex items-center gap-3 text-sm bg-secondary/40 rounded-md px-3 py-1.5">
                   <span className="w-6 text-muted-foreground">#{i + 1}</span>
-                  <span className="font-medium">{s.weight ?? "—"} kg × {s.reps ?? "—"}</span>
+                  <span className="font-medium">{s.weight ?? "—"} {units} × {s.reps ?? "—"}</span>
                   {s.rpe && <span className="text-xs text-muted-foreground">RPE {s.rpe}</span>}
                   {s.is_pr && <span className="ml-auto text-xs font-bold text-primary">🏆 PR</span>}
                 </div>

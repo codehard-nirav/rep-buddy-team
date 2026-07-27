@@ -40,6 +40,8 @@ function ProgramDetail() {
 
   async function add() {
     if (!routineId) return;
+    // Replace existing (week, day) for this program
+    await supabase.from("program_days").delete().eq("program_id", id).eq("week_number", week).eq("day_number", day);
     await supabase.from("program_days").insert({ program_id: id, week_number: week, day_number: day, routine_id: routineId, label } as any);
     qc.invalidateQueries({ queryKey: ["program", id] });
     setLabel("");

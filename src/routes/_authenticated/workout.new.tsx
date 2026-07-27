@@ -27,7 +27,7 @@ function NewWorkout() {
 
   async function startEmpty() {
     const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
+    if (!u.user) return toast.error("Not signed in.");
     const { data, error } = await supabase
       .from("workouts")
       .insert({ user_id: u.user.id, name: "Empty workout" } as any)
@@ -39,7 +39,7 @@ function NewWorkout() {
 
   async function startFromRoutine(r: any) {
     const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
+    if (!u.user) return toast.error("Not signed in.");
     const { data: workout, error } = await supabase
       .from("workouts")
       .insert({ user_id: u.user.id, routine_id: r.id, name: r.name } as any)

@@ -1,10 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Plus, X, Timer, Check, Trash2, Search } from "lucide-react";
 import { z } from "zod";
+import { useUnits } from "@/lib/use-units";
 
 const searchSchema = z.object({
   add: z.string().optional(),
@@ -21,6 +22,19 @@ function LogWorkout() {
   const search = Route.useSearch();
   const nav = useNavigate();
   const qc = useQueryClient();
+  const units = useUnits();
+
+  const { data: me } = useQuery({
+    queryKey: ["me-log-profile"],
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return null;
+      const { data } = await supabase.from("profiles").select("rest_timer_seconds").eq("id", u.user.id).maybeSingle();
+      return { userId: u.user.id, restTimer: data?.rest_timer_seconds ?? 90 };
+    },
+    staleTime: 60_000,
+  });
+
 
   const { data: workout } = useQuery({
     queryKey: ["workout", id],
@@ -53,14 +67,18 @@ function LogWorkout() {
   }, [sets]);
 
   const [pickerOpen, setPickerOpen] = useState(false);
+  const bootstrappedRef = useRef<string | null>(null);
 
-  // Auto-add exercise from ?add= or routine load
+  // Auto-add exercise from ?add= or routine load — run at most once per workout id.
   useEffect(() => {
+    if (!search.add && !search.routine) return;
+    if (bootstrappedRef.current === id) return;
+    bootstrappedRef.current = id;
     async function bootstrap() {
       if (search.add) {
         await addExercise(search.add, false);
-        nav({ to: "/workout/$id/log", params: { id }, search: {}, replace: true });
-      } else if (search.routine && grouped.length === 0) {
+        qc.invalidateQueries({ queryKey: ["workout-sets", id] });
+      } else if (search.routine) {
         const { data: rex } = await supabase
           .from("routine_exercises")
           .select("*")
@@ -70,12 +88,13 @@ function LogWorkout() {
           await addExercise(r.exercise_id, false);
         }
         qc.invalidateQueries({ queryKey: ["workout-sets", id] });
-        nav({ to: "/workout/$id/log", params: { id }, search: {}, replace: true });
       }
+      nav({ to: "/workout/$id/log", params: { id }, search: {}, replace: true });
     }
     void bootstrap();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search.add, search.routine]);
+  }, [id, search.add, search.routine]);
+
 
   async function addExercise(exId: string, invalidate = true) {
     // Fetch previous set for autofill
@@ -129,13 +148,21 @@ function LogWorkout() {
   }
 
   async function finish() {
-    // Compute volume + PRs
-    const totalVolume = (sets ?? []).reduce((sum: number, s: any) => sum + Number(s.weight ?? 0) * Number(s.reps ?? 0), 0);
-    // PR = max weight * reps for each exercise in this session > previous max
+    // Flush any focused NumInput so its onBlur commits first.
+    if (typeof document !== "undefined" && document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    // Refetch fresh sets to include the just-committed edit.
+    const { data: freshSets } = await supabase
+      .from("workout_sets")
+      .select("id, exercise_id, weight, reps")
+      .eq("workout_id", id);
+    const finalSets = freshSets ?? sets ?? [];
+    const totalVolume = finalSets.reduce((sum: number, s: any) => sum + Number(s.weight ?? 0) * Number(s.reps ?? 0), 0);
     const { data: u } = await supabase.auth.getUser();
     if (u.user) {
       const byEx: Record<string, { max: number; set_id: string }> = {};
-      (sets ?? []).forEach((s: any) => {
+      finalSets.forEach((s: any) => {
         const load = Number(s.weight ?? 0);
         if (!byEx[s.exercise_id] || load > byEx[s.exercise_id].max) {
           byEx[s.exercise_id] = { max: load, set_id: s.id };
@@ -144,16 +171,16 @@ function LogWorkout() {
       for (const [exId, info] of Object.entries(byEx)) {
         const { data: prev } = await supabase
           .from("workout_sets")
-          .select("weight, workouts!inner(user_id, finished_at)")
+          .select("weight, workouts!inner(user_id, finished_at, id)")
           .eq("exercise_id", exId)
           .eq("workouts.user_id", u.user.id)
           .not("workouts.finished_at", "is", null)
+          .neq("workouts.id", id)
           .order("weight", { ascending: false })
           .limit(1)
           .maybeSingle();
-        if (!prev || Number(prev.weight ?? 0) < info.max) {
-          await supabase.from("workout_sets").update({ is_pr: true }).eq("id", info.set_id);
-        }
+        const isPr = !prev || Number(prev.weight ?? 0) < info.max;
+        await supabase.from("workout_sets").update({ is_pr: isPr }).eq("id", info.set_id);
       }
     }
     const started = workout?.started_at ? new Date(workout.started_at).getTime() : Date.now();
@@ -217,7 +244,7 @@ function LogWorkout() {
             {g.sets.map((s: any, i: number) => (
               <div key={s.id} className="grid grid-cols-[auto_1fr_1fr_1fr_auto] gap-2 items-center py-1">
                 <span className="w-6 text-center text-sm font-semibold">{i + 1}</span>
-                <NumInput value={s.weight} onCommit={(v) => updateSet(s.id, { weight: v })} placeholder="kg" />
+                <NumInput value={s.weight} onCommit={(v) => updateSet(s.id, { weight: v })} placeholder={units} />
                 <NumInput value={s.reps} onCommit={(v) => updateSet(s.id, { reps: v })} placeholder="reps" />
                 <NumInput value={s.rpe} onCommit={(v) => updateSet(s.id, { rpe: v })} placeholder="RPE" step={0.5} />
                 <button onClick={() => deleteSet(s.id)} className="p-1 text-muted-foreground hover:text-destructive">
@@ -242,7 +269,7 @@ function LogWorkout() {
         <Plus className="w-5 h-5" /> Add exercise
       </button>
 
-      <RestTimer />
+      <RestTimer defaultSeconds={me?.restTimer ?? 90} />
 
       {pickerOpen && (
         <ExercisePicker
@@ -274,16 +301,17 @@ function RunningTimer({ startedAt }: { startedAt?: string | null }) {
   );
 }
 
-function RestTimer() {
+function RestTimer({ defaultSeconds = 90 }: { defaultSeconds?: number }) {
   const [remaining, setRemaining] = useState(0);
   useEffect(() => {
     if (remaining <= 0) return;
     const t = setInterval(() => setRemaining((r) => r - 1), 1000);
     return () => clearInterval(t);
   }, [remaining]);
+  const presets = Array.from(new Set([defaultSeconds, 60, 90, 120, 180])).slice(0, 4);
   return (
     <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-10 flex gap-2">
-      {[60, 90, 120, 180].map((s) => (
+      {presets.map((s) => (
         <button
           key={s}
           onClick={() => setRemaining(s)}
