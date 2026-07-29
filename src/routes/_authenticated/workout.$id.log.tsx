@@ -234,21 +234,21 @@ function LogWorkout() {
                 Remove
               </button>
             </div>
-            <div className="grid grid-cols-[auto_1fr_1fr_1fr_auto] gap-2 items-center text-xs uppercase tracking-wider text-muted-foreground mb-1">
-              <span>#</span>
+            <div className="grid grid-cols-[24px_1fr_1fr_1fr_24px] gap-1.5 items-center text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+              <span className="text-center">#</span>
               <span>Weight</span>
               <span>Reps</span>
               <span>RPE</span>
               <span />
             </div>
             {g.sets.map((s: any, i: number) => (
-              <div key={s.id} className="grid grid-cols-[auto_1fr_1fr_1fr_auto] gap-2 items-center py-1">
-                <span className="w-6 text-center text-sm font-semibold">{i + 1}</span>
+              <div key={s.id} className="grid grid-cols-[24px_1fr_1fr_1fr_24px] gap-1.5 items-center py-0.5">
+                <span className="text-center text-xs font-semibold">{i + 1}</span>
                 <NumInput value={s.weight} onCommit={(v) => updateSet(s.id, { weight: v })} placeholder={units} />
                 <NumInput value={s.reps} onCommit={(v) => updateSet(s.id, { reps: v })} placeholder="reps" />
                 <NumInput value={s.rpe} onCommit={(v) => updateSet(s.id, { rpe: v })} placeholder="RPE" step={0.5} />
-                <button onClick={() => deleteSet(s.id)} className="p-1 text-muted-foreground hover:text-destructive">
-                  <X className="w-4 h-4" />
+                <button onClick={() => deleteSet(s.id)} className="p-0.5 text-muted-foreground hover:text-destructive">
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </div>
             ))}
