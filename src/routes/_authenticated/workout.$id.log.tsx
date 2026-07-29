@@ -337,7 +337,7 @@ function NumInput({ value, onCommit, placeholder, step = 1 }: { value: any; onCo
       onBlur={() => onCommit(v === "" ? null : Number(v))}
       placeholder={placeholder}
       step={step}
-      className="h-10 px-2 rounded-md bg-background border border-input text-center font-medium"
+      className="h-8 px-1.5 w-full min-w-0 text-sm rounded-md bg-background border border-input text-center font-medium"
     />
   );
 }
