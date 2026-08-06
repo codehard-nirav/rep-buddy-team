@@ -47,9 +47,27 @@ function AuthPage() {
     };
   }, [nav, search.redirect]);
 
+  async function handleResend() {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: { emailRedirectTo: window.location.origin },
+      });
+      if (error) throw error;
+      toast.success("Confirmation email sent. Check your inbox (and spam).");
+    } catch (err: any) {
+      toast.error(err.message ?? "Could not resend the email");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    setNeedsConfirm(false);
     try {
       if (mode === "signup") {
         const { data, error } = await supabase.auth.signUp({
@@ -65,7 +83,8 @@ function AuthPage() {
           toast.success("Account created!");
           nav({ to: "/onboarding", replace: true });
         } else {
-          toast.success("Check your email to confirm your account.");
+          toast.success("Check your email to confirm your account, then sign in.");
+          setNeedsConfirm(true);
           setMode("signin");
         }
       } else {
@@ -74,11 +93,24 @@ function AuthPage() {
         nav({ to: search.redirect ?? "/dashboard", replace: true });
       }
     } catch (err: any) {
-      toast.error(err.message ?? "Something went wrong");
+      const code = err?.code ?? "";
+      const raw = String(err?.message ?? "");
+      if (code === "email_not_confirmed" || /not confirmed/i.test(raw)) {
+        setNeedsConfirm(true);
+        toast.error("Your email isn't confirmed yet. Resend the confirmation link below.");
+      } else if (code === "invalid_credentials") {
+        setNeedsConfirm(true);
+        toast.error(
+          "We couldn't sign you in. If you signed up with Google, use “Continue with Google”. If you signed up with email, confirm your email first — you can resend the link below.",
+        );
+      } else {
+        toast.error(raw || "Something went wrong");
+      }
     } finally {
       setLoading(false);
     }
   }
+
 
   async function handleGoogle() {
     const result = await lovable.auth.signInWithOAuth("google", {
