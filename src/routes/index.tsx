@@ -2,7 +2,9 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Zap, Users, BarChart3, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import gymigoLogo from "@/assets/gymigo-logo.png";
+import gymigoLogoAsset from "@/assets/gymigo-logo.png.asset.json";
+
+const gymigoLogo = gymigoLogoAsset.url;
 
 export const Route = createFileRoute("/")({
   head: () => ({
