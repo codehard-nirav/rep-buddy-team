@@ -23,6 +23,15 @@ export const Route = createFileRoute("/")({
       },
       { property: "og:url", content: "https://gymigo.fit/" },
       { property: "og:type", content: "website" },
+      {
+        property: "og:image",
+        content: `https://gymigo.fit${gymigoSplashAsset.url}`,
+      },
+      {
+        name: "twitter:image",
+        content: `https://gymigo.fit${gymigoSplashAsset.url}`,
+      },
+
     ],
     links: [{ rel: "canonical", href: "https://gymigo.fit/" }],
     scripts: [
