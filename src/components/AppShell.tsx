@@ -2,7 +2,6 @@ import { Link, useRouter, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   Home,
-  Dumbbell,
   BookOpen,
   BarChart3,
   Users,
@@ -17,6 +16,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import gymigoLogo from "@/assets/gymigo-logo.png";
 
 const NAV = [
   { to: "/dashboard", label: "Home", icon: Home },
@@ -69,9 +69,13 @@ export function AppShell({ children }: { children: ReactNode }) {
       <aside className="hidden lg:flex flex-col w-60 border-r border-sidebar-border bg-sidebar">
         <div className="p-5 border-b border-sidebar-border">
           <Link to="/dashboard" className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg bg-gradient-primary grid place-items-center shadow-glow">
-              <Dumbbell className="w-5 h-5 text-primary-foreground" />
-            </div>
+            <img
+              src={gymigoLogo}
+              alt="Gymigo logo"
+              width={36}
+              height={36}
+              className="w-9 h-9 rounded-lg shadow-glow"
+            />
             <span className="font-display font-bold text-xl tracking-tight">Gymigo</span>
           </Link>
         </div>
@@ -103,9 +107,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Mobile top bar */}
       <div className="lg:hidden fixed top-0 inset-x-0 z-30 flex items-center justify-between px-4 h-14 border-b border-border bg-background/80 backdrop-blur">
         <Link to="/dashboard" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-md bg-gradient-primary grid place-items-center">
-            <Dumbbell className="w-4 h-4 text-primary-foreground" />
-          </div>
+          <img src={gymigoLogo} alt="Gymigo logo" width={28} height={28} className="w-7 h-7 rounded-md" />
           <span className="font-display font-bold">Gymigo</span>
         </Link>
         <button onClick={() => setOpen((v) => !v)} className="text-sm px-3 py-1.5 rounded-md bg-secondary">

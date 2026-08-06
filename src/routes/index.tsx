@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { Dumbbell, Zap, Users, BarChart3, ArrowRight } from "lucide-react";
+import { Zap, Users, BarChart3, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import gymigoLogo from "@/assets/gymigo-logo.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -61,9 +62,7 @@ function Landing() {
     <div className="min-h-screen bg-gradient-hero">
       <header className="max-w-6xl mx-auto flex items-center justify-between p-6">
         <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-lg bg-gradient-primary grid place-items-center shadow-glow">
-            <Dumbbell className="w-5 h-5 text-primary-foreground" />
-          </div>
+          <img src={gymigoLogo} alt="Gymigo logo" width={36} height={36} className="w-9 h-9 rounded-lg shadow-glow" />
           <span className="font-display font-extrabold text-2xl tracking-tight">Gymigo</span>
         </div>
         <div className="flex items-center gap-2">
