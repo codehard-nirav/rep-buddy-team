@@ -32,6 +32,8 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [needsConfirm, setNeedsConfirm] = useState(false);
+
 
   useEffect(() => {
     let cancelled = false;
@@ -47,9 +49,27 @@ function AuthPage() {
     };
   }, [nav, search.redirect]);
 
+  async function handleResend() {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: { emailRedirectTo: window.location.origin },
+      });
+      if (error) throw error;
+      toast.success("Confirmation email sent. Check your inbox (and spam).");
+    } catch (err: any) {
+      toast.error(err.message ?? "Could not resend the email");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    setNeedsConfirm(false);
     try {
       if (mode === "signup") {
         const { data, error } = await supabase.auth.signUp({
@@ -65,7 +85,8 @@ function AuthPage() {
           toast.success("Account created!");
           nav({ to: "/onboarding", replace: true });
         } else {
-          toast.success("Check your email to confirm your account.");
+          toast.success("Check your email to confirm your account, then sign in.");
+          setNeedsConfirm(true);
           setMode("signin");
         }
       } else {
@@ -74,11 +95,24 @@ function AuthPage() {
         nav({ to: search.redirect ?? "/dashboard", replace: true });
       }
     } catch (err: any) {
-      toast.error(err.message ?? "Something went wrong");
+      const code = err?.code ?? "";
+      const raw = String(err?.message ?? "");
+      if (code === "email_not_confirmed" || /not confirmed/i.test(raw)) {
+        setNeedsConfirm(true);
+        toast.error("Your email isn't confirmed yet. Resend the confirmation link below.");
+      } else if (code === "invalid_credentials") {
+        setNeedsConfirm(true);
+        toast.error(
+          "We couldn't sign you in. If you signed up with Google, use “Continue with Google”. If you signed up with email, confirm your email first — you can resend the link below.",
+        );
+      } else {
+        toast.error(raw || "Something went wrong");
+      }
     } finally {
       setLoading(false);
     }
   }
+
 
   async function handleGoogle() {
     const result = await lovable.auth.signInWithOAuth("google", {
@@ -161,6 +195,25 @@ function AuthPage() {
               {loading ? "…" : mode === "signup" ? "Create account" : "Sign in"}
             </button>
           </form>
+
+          {needsConfirm && mode === "signin" && (
+            <div className="rounded-md border border-border bg-secondary/40 p-3 text-xs text-muted-foreground space-y-2">
+              <p>
+                Not able to sign in? If you created this account with Google, use “Continue with
+                Google” above. If you used email, your address may still need confirming.
+              </p>
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={loading || !email}
+                className="text-primary font-semibold disabled:opacity-50"
+              >
+                Resend confirmation email
+              </button>
+            </div>
+          )}
+
+
 
           <p className="text-center text-sm text-muted-foreground">
             {mode === "signup" ? (
