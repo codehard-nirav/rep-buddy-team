@@ -58,8 +58,17 @@ function Coach() {
       toast.error(`Already ${existing.status}.`);
       return;
     }
-    const { error } = await supabase.from("coach_clients").insert({ coach_id: data.meId, client_id: clientId, invited_email: uname, status: "pending" } as any);
+    const { data: inserted, error } = await supabase
+      .from("coach_clients")
+      .insert({ coach_id: data.meId, client_id: clientId, status: "pending" } as any)
+      .select("id")
+      .single();
     if (error) return toast.error(error.message);
+    if (inserted?.id) {
+      await supabase
+        .from("coach_invite_emails")
+        .insert({ coach_client_id: inserted.id, coach_id: data.meId, invited_email: uname } as any);
+    }
     toast.success("Invite sent");
     setInviteEmail("");
     qc.invalidateQueries({ queryKey: ["coach-data"] });

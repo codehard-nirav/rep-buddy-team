@@ -1,0 +1,1 @@
+ALTER VIEW public.coach_invites SET (security_invoker = false);

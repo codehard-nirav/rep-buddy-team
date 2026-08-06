@@ -103,7 +103,6 @@ export type Database = {
           coach_id: string
           connected_at: string | null
           id: string
-          invited_email: string | null
           status: Database["public"]["Enums"]["coach_client_status"]
         }
         Insert: {
@@ -111,7 +110,6 @@ export type Database = {
           coach_id: string
           connected_at?: string | null
           id?: string
-          invited_email?: string | null
           status?: Database["public"]["Enums"]["coach_client_status"]
         }
         Update: {
@@ -119,10 +117,38 @@ export type Database = {
           coach_id?: string
           connected_at?: string | null
           id?: string
-          invited_email?: string | null
           status?: Database["public"]["Enums"]["coach_client_status"]
         }
         Relationships: []
+      }
+      coach_invite_emails: {
+        Row: {
+          coach_client_id: string
+          coach_id: string
+          created_at: string
+          invited_email: string
+        }
+        Insert: {
+          coach_client_id: string
+          coach_id: string
+          created_at?: string
+          invited_email: string
+        }
+        Update: {
+          coach_client_id?: string
+          coach_id?: string
+          created_at?: string
+          invited_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_invite_emails_coach_client_id_fkey"
+            columns: ["coach_client_id"]
+            isOneToOne: true
+            referencedRelation: "coach_clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       exercises: {
         Row: {
