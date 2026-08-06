@@ -5,6 +5,32 @@ import { UserPlus, UserMinus, Trophy, Flame } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/u/$username")({
+  head: ({ params }) => ({
+    meta: [
+      { title: `@${params.username} — Gymigo athlete profile` },
+      {
+        name: "description",
+        content: `Training profile for @${params.username} on Gymigo: completed workouts, personal records, streaks, and followers.`,
+      },
+      { property: "og:title", content: `@${params.username} on Gymigo` },
+      {
+        property: "og:description",
+        content: `See @${params.username}'s workouts, PRs, and training streak on Gymigo.`,
+      },
+      { property: "og:type", content: "profile" },
+      { name: "robots", content: "noindex" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "ProfilePage",
+          name: `@${params.username} on Gymigo`,
+        }),
+      },
+    ],
+  }),
   component: UserProfile,
 });
 

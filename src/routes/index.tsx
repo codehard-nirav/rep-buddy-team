@@ -6,21 +6,41 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Gymigo — Think less, lift more" },
+      { title: "Gymigo — Free Gym Workout Tracker & Coaching App" },
       {
         name: "description",
         content:
-          "Fast gym workout tracking, a rich exercise library, and coach-client tools. Free while in beta.",
+          "Log sets in seconds, auto-detect PRs, follow multi-week programs, and coach clients. Gymigo is the distraction-free gym workout tracker — free in beta.",
       },
-      { property: "og:title", content: "Gymigo — Think less, lift more" },
+      { property: "og:title", content: "Gymigo — Free Gym Workout Tracker & Coaching App" },
       {
         property: "og:description",
-        content: "Fast in-gym logging, exercise library, PRs, and community.",
+        content:
+          "Fast in-gym set logging, a 60+ movement exercise library, PR and volume charts, plus coach-client programs.",
+      },
+      { property: "og:url", content: "https://gymigo.fit/" },
+      { property: "og:type", content: "website" },
+    ],
+    links: [{ rel: "canonical", href: "https://gymigo.fit/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          name: "Gymigo",
+          url: "https://gymigo.fit/",
+          applicationCategory: "HealthApplication",
+          operatingSystem: "Web",
+          description:
+            "Gym workout tracker with fast set logging, PR detection, programs, and coach-client tools.",
+        }),
       },
     ],
   }),
   component: Landing,
 });
+
 
 function Landing() {
   const nav = useNavigate();
@@ -110,7 +130,7 @@ function Landing() {
             <div className="w-10 h-10 rounded-lg bg-primary/10 grid place-items-center mb-4">
               <f.icon className="w-5 h-5 text-primary" />
             </div>
-            <h3 className="font-bold text-lg">{f.title}</h3>
+            <h2 className="font-bold text-lg">{f.title}</h2>
             <p className="text-sm text-muted-foreground mt-1">{f.body}</p>
           </div>
         ))}

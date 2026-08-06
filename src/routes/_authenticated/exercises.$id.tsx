@@ -7,6 +7,22 @@ import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/exercises/$id")({
+  head: () => ({
+    meta: [
+      { title: "Exercise details — Gymigo" },
+      {
+        name: "description",
+        content:
+          "Exercise details on Gymigo: targeted muscles, equipment, technique cues, and your personal records for this movement.",
+      },
+      { property: "og:title", content: "Exercise details — Gymigo" },
+      {
+        property: "og:description",
+        content: "Muscles worked, equipment, cues, and your history for this movement.",
+      },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
   component: ExerciseDetail,
 });
 
