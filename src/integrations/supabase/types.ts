@@ -623,7 +623,33 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      coach_invites: {
+        Row: {
+          client_id: string | null
+          coach_id: string | null
+          connected_at: string | null
+          id: string | null
+          invited_email: string | null
+          status: Database["public"]["Enums"]["coach_client_status"] | null
+        }
+        Insert: {
+          client_id?: string | null
+          coach_id?: string | null
+          connected_at?: string | null
+          id?: string | null
+          invited_email?: never
+          status?: Database["public"]["Enums"]["coach_client_status"] | null
+        }
+        Update: {
+          client_id?: string | null
+          coach_id?: string | null
+          connected_at?: string | null
+          id?: string | null
+          invited_email?: never
+          status?: Database["public"]["Enums"]["coach_client_status"] | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
