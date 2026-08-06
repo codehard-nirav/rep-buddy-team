@@ -196,6 +196,25 @@ function AuthPage() {
             </button>
           </form>
 
+          {needsConfirm && mode === "signin" && (
+            <div className="rounded-md border border-border bg-secondary/40 p-3 text-xs text-muted-foreground space-y-2">
+              <p>
+                Not able to sign in? If you created this account with Google, use “Continue with
+                Google” above. If you used email, your address may still need confirming.
+              </p>
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={loading || !email}
+                className="text-primary font-semibold disabled:opacity-50"
+              >
+                Resend confirmation email
+              </button>
+            </div>
+          )}
+
+
+
           <p className="text-center text-sm text-muted-foreground">
             {mode === "signup" ? (
               <>
