@@ -3,6 +3,8 @@ import { useEffect } from "react";
 import { Zap, Users, BarChart3, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import gymigoLogoAsset from "@/assets/gymigo-logo.png.asset.json";
+import gymigoSplashAsset from "@/assets/gymigo-splash.png.asset.json";
+
 
 const gymigoLogo = gymigoLogoAsset.url;
 
