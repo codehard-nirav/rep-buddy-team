@@ -48,6 +48,8 @@ function Onboarding() {
   return (
     <div className="min-h-screen bg-gradient-hero grid place-items-center px-4">
       <div className="w-full max-w-lg bg-gradient-card border border-border rounded-2xl p-8 shadow-card">
+        <h1 className="text-xl font-extrabold mb-4">Complete your profile</h1>
+
         <div className="flex gap-1 mb-6">
           {[0, 1, 2].map((i) => (
             <div key={i} className={`h-1 flex-1 rounded-full ${i <= step ? "bg-primary" : "bg-border"}`} />

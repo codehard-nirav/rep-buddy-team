@@ -88,6 +88,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:site_name", content: "Gymigo" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -97,6 +98,26 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700;800&display=swap",
+      },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify([
+          {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "Gymigo",
+            url: "https://gymigo.fit/",
+            logo: "https://gymigo.fit/favicon.ico",
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "Gymigo",
+            url: "https://gymigo.fit/",
+          },
+        ]),
       },
     ],
   }),

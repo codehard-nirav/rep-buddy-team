@@ -164,6 +164,7 @@ function AuthPage() {
               <input
                 required
                 type="text"
+                aria-label="Your name"
                 placeholder="Your name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -173,6 +174,7 @@ function AuthPage() {
             <input
               required
               type="email"
+              aria-label="Email address"
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -181,6 +183,7 @@ function AuthPage() {
             <input
               required
               type="password"
+              aria-label="Password"
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
