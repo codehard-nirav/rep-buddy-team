@@ -16,7 +16,9 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import gymigoLogo from "@/assets/gymigo-logo.png";
+import gymigoLogoAsset from "@/assets/gymigo-logo.png.asset.json";
+
+const gymigoLogo = gymigoLogoAsset.url;
 
 const NAV = [
   { to: "/dashboard", label: "Home", icon: Home },

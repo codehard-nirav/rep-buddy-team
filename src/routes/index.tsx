@@ -2,7 +2,11 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Zap, Users, BarChart3, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import gymigoLogo from "@/assets/gymigo-logo.png";
+import gymigoLogoAsset from "@/assets/gymigo-logo.png.asset.json";
+import gymigoSplashAsset from "@/assets/gymigo-splash.png.asset.json";
+
+
+const gymigoLogo = gymigoLogoAsset.url;
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -21,6 +25,15 @@ export const Route = createFileRoute("/")({
       },
       { property: "og:url", content: "https://gymigo.fit/" },
       { property: "og:type", content: "website" },
+      {
+        property: "og:image",
+        content: `https://gymigo.fit${gymigoSplashAsset.url}`,
+      },
+      {
+        name: "twitter:image",
+        content: `https://gymigo.fit${gymigoSplashAsset.url}`,
+      },
+
     ],
     links: [{ rel: "canonical", href: "https://gymigo.fit/" }],
     scripts: [
