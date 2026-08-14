@@ -1,6 +1,6 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { Zap, Users, BarChart3, ArrowRight } from "lucide-react";
+import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { Zap, Users, BarChart3, ArrowRight, Dumbbell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import gymigoLogoAsset from "@/assets/gymigo-logo.png.asset.json";
 import gymigoSplashAsset from "@/assets/gymigo-splash.png.asset.json";
@@ -58,10 +58,16 @@ export const Route = createFileRoute("/")({
 
 function Landing() {
   const nav = useNavigate();
+  const router = useRouter();
+  const [handlingCallback] = useState(() =>
+    typeof window !== "undefined" && window.location.hash.includes("access_token="),
+  );
   useEffect(() => {
     let cancelled = false;
 
-    const go = () => {
+    const go = async () => {
+      if (cancelled) return;
+      await router.invalidate();
       if (!cancelled) nav({ to: "/dashboard", replace: true });
     };
 
@@ -76,23 +82,37 @@ function Landing() {
         .setSession({ access_token, refresh_token })
         .then(({ error }) => {
           window.history.replaceState(null, "", window.location.pathname + window.location.search);
-          if (!error) go();
+          if (!error) void go();
         })
         .catch(() => {});
     } else {
       supabase.auth.getSession().then(({ data }) => {
-        if (!cancelled && data.session) go();
+        if (!cancelled && data.session) void go();
       });
     }
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) go();
+      if (session) void go();
     });
     return () => {
       cancelled = true;
       sub.subscription.unsubscribe();
     };
-  }, [nav]);
+  }, [nav, router]);
+
+  if (handlingCallback) {
+    return (
+      <div className="min-h-screen bg-gradient-hero grid place-items-center px-4">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-11 h-11 rounded-xl bg-gradient-primary grid place-items-center shadow-glow">
+            <Dumbbell className="w-6 h-6 text-primary-foreground" />
+          </div>
+          <div role="status" aria-label="Signing you in" className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          <p className="text-sm text-muted-foreground">Signing you in…</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-hero">
