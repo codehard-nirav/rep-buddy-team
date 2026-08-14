@@ -509,6 +509,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "workout_comments_author_id_profiles_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "workout_comments_workout_id_fkey"
             columns: ["workout_id"]
             isOneToOne: false
@@ -643,6 +650,13 @@ export type Database = {
             columns: ["routine_id"]
             isOneToOne: false
             referencedRelation: "routines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workouts_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
