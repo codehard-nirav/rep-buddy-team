@@ -13,17 +13,19 @@ export const Route = createFileRoute("/_authenticated/workout/$id/")({
 function WorkoutDetail() {
   const { id } = Route.useParams();
   const units = useUnits();
-  const { data: workout } = useQuery({
+  const { data: workout, isLoading, error } = useQuery({
     queryKey: ["workout-full", id],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error: err } = await supabase
         .from("workouts")
-        .select("*, profiles!workouts_user_id_fkey(display_name, avatar_url), workout_sets(*, exercises(name))")
+        .select("*, profiles!workouts_user_id_profiles_fkey(display_name, avatar_url), workout_sets(*, exercises(name))")
         .eq("id", id)
         .maybeSingle();
+      if (err) throw err;
       return data;
     },
   });
+
 
   const { data: comments, refetch: refetchComments } = useQuery({
     queryKey: ["workout-comments", id],
@@ -52,7 +54,23 @@ function WorkoutDetail() {
     refetchComments();
   }
 
-  if (!workout) return <div className="p-8">Loading…</div>;
+  if (isLoading) return <div className="p-8">Loading…</div>;
+  if (error)
+    return (
+      <div className="max-w-3xl mx-auto p-8">
+        <p className="font-semibold mb-2">Couldn't load this workout.</p>
+        <p className="text-sm text-muted-foreground mb-4">{(error as Error).message}</p>
+        <Link to="/history" className="text-primary underline">Back to history</Link>
+      </div>
+    );
+  if (!workout)
+    return (
+      <div className="max-w-3xl mx-auto p-8">
+        <p className="font-semibold mb-2">Workout not found.</p>
+        <Link to="/history" className="text-primary underline">Back to history</Link>
+      </div>
+    );
+
 
   const grouped: Record<string, any[]> = {};
   (workout.workout_sets ?? []).forEach((s: any) => {

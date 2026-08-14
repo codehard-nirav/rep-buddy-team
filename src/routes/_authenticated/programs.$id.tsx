@@ -3,6 +3,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Plus, X } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/_authenticated/programs/$id")({
   component: ProgramDetail,
@@ -39,18 +41,23 @@ function ProgramDetail() {
   const [label, setLabel] = useState("");
 
   async function add() {
-    if (!routineId) return;
+    if (!routineId) return toast.error("Pick a routine first.");
     // Replace existing (week, day) for this program
-    await supabase.from("program_days").delete().eq("program_id", id).eq("week_number", week).eq("day_number", day);
-    await supabase.from("program_days").insert({ program_id: id, week_number: week, day_number: day, routine_id: routineId, label } as any);
-    qc.invalidateQueries({ queryKey: ["program", id] });
+    const del = await supabase.from("program_days").delete().eq("program_id", id).eq("week_number", week).eq("day_number", day);
+    if (del.error) return toast.error(del.error.message);
+    const { error } = await supabase.from("program_days").insert({ program_id: id, week_number: week, day_number: day, routine_id: routineId, label: label.trim() || null } as any);
+    if (error) return toast.error(error.message);
+    await qc.invalidateQueries({ queryKey: ["program", id] });
     setLabel("");
+    toast.success(`Week ${week} · Day ${day} added`);
   }
 
   async function remove(dayId: string) {
-    await supabase.from("program_days").delete().eq("id", dayId);
+    const { error } = await supabase.from("program_days").delete().eq("id", dayId);
+    if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["program", id] });
   }
+
 
   if (!program) return <div className="p-8">Loading…</div>;
 
