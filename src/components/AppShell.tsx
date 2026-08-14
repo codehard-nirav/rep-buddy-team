@@ -119,7 +119,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {open && (
         <div className="lg:hidden fixed inset-0 z-40 pt-14 bg-background/95 backdrop-blur">
-          <nav className="p-4 space-y-1">
+          <nav className="p-4 space-y-1" onClick={() => setOpen(false)}>
             {NAV.map((item) => (
               <NavLink key={item.to} {...item} />
             ))}
@@ -129,6 +129,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </nav>
         </div>
       )}
+
 
       <main className="flex-1 min-w-0 lg:pt-0 pt-14">
         {children}
@@ -147,14 +148,31 @@ export function AppShell({ children }: { children: ReactNode }) {
 }
 
 function NavLink({ to, label, icon: Icon }: { to: string; label: string; icon: typeof Home }) {
+  const router = useRouter();
+  const qc = useQueryClient();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  function handleClick(e: React.MouseEvent<HTMLAnchorElement>) {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+    if (pathname !== to) return;
+    // Already here: re-run loaders + refetch data, reset scroll.
+    e.preventDefault();
+    router.invalidate();
+    qc.invalidateQueries();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+
   return (
     <Link
       to={to}
+      onClick={handleClick}
       activeProps={{ className: "bg-sidebar-accent text-primary" }}
-      className="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
+      className="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors active:scale-[0.98] active:bg-sidebar-accent"
     >
       <Icon className="w-4 h-4" />
       {label}
     </Link>
   );
 }
+

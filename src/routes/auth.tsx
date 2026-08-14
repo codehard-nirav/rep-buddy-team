@@ -12,7 +12,9 @@ const searchSchema = z.object({
 });
 
 export const Route = createFileRoute("/auth")({
+  ssr: false,
   validateSearch: searchSchema,
+
   head: () => ({
     meta: [
       { title: "Sign in — Gymigo" },
@@ -33,21 +35,30 @@ function AuthPage() {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [needsConfirm, setNeedsConfirm] = useState(false);
-
+  const [checking, setChecking] = useState(true);
+  const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
+    const go = () => {
+      if (cancelled) return;
+      setRedirecting(true);
+      nav({ to: search.redirect ?? "/dashboard", replace: true });
+    };
     supabase.auth.getSession().then(({ data }) => {
-      if (!cancelled && data.session) nav({ to: search.redirect ?? "/dashboard", replace: true });
+      if (cancelled) return;
+      if (data.session) go();
+      else setChecking(false);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) nav({ to: search.redirect ?? "/dashboard", replace: true });
+      if (session) go();
     });
     return () => {
       cancelled = true;
       sub.subscription.unsubscribe();
     };
   }, [nav, search.redirect]);
+
 
   async function handleResend() {
     setLoading(true);
@@ -92,8 +103,10 @@ function AuthPage() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        setRedirecting(true);
         nav({ to: search.redirect ?? "/dashboard", replace: true });
       }
+
     } catch (err: any) {
       const code = err?.code ?? "";
       const raw = String(err?.message ?? "");
@@ -123,12 +136,34 @@ function AuthPage() {
       return;
     }
     if (result.redirected) return;
+    setRedirecting(true);
     nav({ to: search.redirect ?? "/dashboard", replace: true });
+  }
+
+  if (checking || redirecting) {
+    return (
+      <div className="min-h-screen bg-gradient-hero grid place-items-center px-4">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-11 h-11 rounded-xl bg-gradient-primary grid place-items-center shadow-glow">
+            <Dumbbell className="w-6 h-6 text-primary-foreground" />
+          </div>
+          <div
+            role="status"
+            aria-label="Loading"
+            className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin"
+          />
+          <p className="text-sm text-muted-foreground">
+            {redirecting ? "Signing you in…" : "Loading…"}
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-gradient-hero grid place-items-center px-4">
       <div className="w-full max-w-md">
+
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2">
             <div className="w-11 h-11 rounded-xl bg-gradient-primary grid place-items-center shadow-glow">
