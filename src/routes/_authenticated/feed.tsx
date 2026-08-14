@@ -29,7 +29,7 @@ function Feed() {
       const ids = [u.user.id, ...(follows ?? []).map((f: any) => f.followed_id)];
       const { data: workouts } = await supabase
         .from("workouts")
-        .select("id, name, started_at, total_volume, duration_seconds, user_id, profiles!workouts_user_id_fkey(display_name, avatar_url, username)")
+        .select("id, name, started_at, total_volume, duration_seconds, user_id, profiles!workouts_user_id_profiles_fkey(display_name, avatar_url, username)")
         .in("user_id", ids)
         .not("finished_at", "is", null)
         .order("started_at", { ascending: false })

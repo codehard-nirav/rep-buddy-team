@@ -18,7 +18,7 @@ function WorkoutDetail() {
     queryFn: async () => {
       const { data } = await supabase
         .from("workouts")
-        .select("*, profiles!workouts_user_id_fkey(display_name, avatar_url), workout_sets(*, exercises(name))")
+        .select("*, profiles!workouts_user_id_profiles_fkey(display_name, avatar_url), workout_sets(*, exercises(name))")
         .eq("id", id)
         .maybeSingle();
       return data;

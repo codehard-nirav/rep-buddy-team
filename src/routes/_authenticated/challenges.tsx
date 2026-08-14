@@ -28,7 +28,7 @@ function Challenges() {
       monthStart.setHours(0, 0, 0, 0);
       const { data: workouts } = await supabase
         .from("workouts")
-        .select("user_id, total_volume, profiles!workouts_user_id_fkey(display_name, avatar_url, username)")
+        .select("user_id, total_volume, profiles!workouts_user_id_profiles_fkey(display_name, avatar_url, username)")
         .in("user_id", ids)
         .not("finished_at", "is", null)
         .gte("started_at", monthStart.toISOString());
