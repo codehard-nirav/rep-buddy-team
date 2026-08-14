@@ -60,17 +60,40 @@ function Landing() {
   const nav = useNavigate();
   useEffect(() => {
     let cancelled = false;
-    supabase.auth.getSession().then(({ data }) => {
-      if (!cancelled && data.session) nav({ to: "/dashboard", replace: true });
-    });
+
+    const go = () => {
+      if (!cancelled) nav({ to: "/dashboard", replace: true });
+    };
+
+    // Google OAuth full-page redirect returns here with tokens in the URL hash.
+    const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : "";
+    const params = new URLSearchParams(hash);
+    const access_token = params.get("access_token");
+    const refresh_token = params.get("refresh_token");
+
+    if (access_token && refresh_token) {
+      supabase.auth
+        .setSession({ access_token, refresh_token })
+        .then(({ error }) => {
+          window.history.replaceState(null, "", window.location.pathname + window.location.search);
+          if (!error) go();
+        })
+        .catch(() => {});
+    } else {
+      supabase.auth.getSession().then(({ data }) => {
+        if (!cancelled && data.session) go();
+      });
+    }
+
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) nav({ to: "/dashboard", replace: true });
+      if (session) go();
     });
     return () => {
       cancelled = true;
       sub.subscription.unsubscribe();
     };
   }, [nav]);
+
   return (
     <div className="min-h-screen bg-gradient-hero">
       <header className="max-w-6xl mx-auto flex items-center justify-between p-6">
