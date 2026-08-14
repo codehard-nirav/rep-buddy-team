@@ -101,8 +101,10 @@ function AuthPage() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        setRedirecting(true);
         nav({ to: search.redirect ?? "/dashboard", replace: true });
       }
+
     } catch (err: any) {
       const code = err?.code ?? "";
       const raw = String(err?.message ?? "");
