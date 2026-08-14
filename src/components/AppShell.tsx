@@ -119,7 +119,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {open && (
         <div className="lg:hidden fixed inset-0 z-40 pt-14 bg-background/95 backdrop-blur">
-          <nav className="p-4 space-y-1">
+          <nav className="p-4 space-y-1" onClick={() => setOpen(false)}>
             {NAV.map((item) => (
               <NavLink key={item.to} {...item} />
             ))}
@@ -129,6 +129,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </nav>
         </div>
       )}
+
 
       <main className="flex-1 min-w-0 lg:pt-0 pt-14">
         {children}
