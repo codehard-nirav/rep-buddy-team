@@ -13,17 +13,19 @@ export const Route = createFileRoute("/_authenticated/workout/$id/")({
 function WorkoutDetail() {
   const { id } = Route.useParams();
   const units = useUnits();
-  const { data: workout } = useQuery({
+  const { data: workout, isLoading, error } = useQuery({
     queryKey: ["workout-full", id],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error: err } = await supabase
         .from("workouts")
         .select("*, profiles!workouts_user_id_profiles_fkey(display_name, avatar_url), workout_sets(*, exercises(name))")
         .eq("id", id)
         .maybeSingle();
+      if (err) throw err;
       return data;
     },
   });
+
 
   const { data: comments, refetch: refetchComments } = useQuery({
     queryKey: ["workout-comments", id],
