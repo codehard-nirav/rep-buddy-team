@@ -134,12 +134,34 @@ function AuthPage() {
       return;
     }
     if (result.redirected) return;
+    setRedirecting(true);
     nav({ to: search.redirect ?? "/dashboard", replace: true });
+  }
+
+  if (checking || redirecting) {
+    return (
+      <div className="min-h-screen bg-gradient-hero grid place-items-center px-4">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-11 h-11 rounded-xl bg-gradient-primary grid place-items-center shadow-glow">
+            <Dumbbell className="w-6 h-6 text-primary-foreground" />
+          </div>
+          <div
+            role="status"
+            aria-label="Loading"
+            className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin"
+          />
+          <p className="text-sm text-muted-foreground">
+            {redirecting ? "Signing you in…" : "Loading…"}
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-gradient-hero grid place-items-center px-4">
       <div className="w-full max-w-md">
+
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2">
             <div className="w-11 h-11 rounded-xl bg-gradient-primary grid place-items-center shadow-glow">
