@@ -40,18 +40,51 @@ function AuthPage() {
 
   useEffect(() => {
     let cancelled = false;
-    const go = () => {
+    const go = async () => {
       if (cancelled) return;
       setRedirecting(true);
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      await Route.router.invalidate();
+      if (cancelled) return;
       nav({ to: search.redirect ?? "/dashboard", replace: true });
     };
-    supabase.auth.getSession().then(({ data }) => {
+
+    const completeCallback = async () => {
+      const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : "";
+      const params = new URLSearchParams(hash);
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
+
+      if (accessToken && refreshToken) {
+        setRedirecting(true);
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        if (error) throw error;
+      }
+
+      const { data, error } = await supabase.auth.getUser();
+      if (error || !data.user) {
+        if (!cancelled) {
+          setChecking(false);
+          setRedirecting(false);
+        }
+        return;
+      }
+      await go();
+    };
+
+    completeCallback().catch((error: unknown) => {
       if (cancelled) return;
-      if (data.session) go();
-      else setChecking(false);
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      setChecking(false);
+      setRedirecting(false);
+      toast.error(error instanceof Error ? error.message : "Google sign-in failed");
     });
+
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) go();
+      if (session) void go();
     });
     return () => {
       cancelled = true;
@@ -128,10 +161,12 @@ function AuthPage() {
 
 
   async function handleGoogle() {
+    setRedirecting(true);
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: `${window.location.origin}/auth?redirect=%2Fdashboard`,
     });
     if (result.error) {
+      setRedirecting(false);
       toast.error(result.error.message ?? "Google sign-in failed");
       return;
     }
