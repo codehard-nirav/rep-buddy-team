@@ -147,14 +147,28 @@ export function AppShell({ children }: { children: ReactNode }) {
 }
 
 function NavLink({ to, label, icon: Icon }: { to: string; label: string; icon: typeof Home }) {
+  const router = useRouter();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  function handleClick(e: React.MouseEvent<HTMLAnchorElement>) {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+    if (pathname !== to) return;
+    // Already here: re-run loaders, reset scroll, and give feedback.
+    e.preventDefault();
+    router.invalidate();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   return (
     <Link
       to={to}
+      onClick={handleClick}
       activeProps={{ className: "bg-sidebar-accent text-primary" }}
-      className="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
+      className="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors active:scale-[0.98] active:bg-sidebar-accent"
     >
       <Icon className="w-4 h-4" />
       {label}
     </Link>
   );
 }
+
