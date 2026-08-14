@@ -58,7 +58,7 @@ export const RestTimer = forwardRef<RestTimerHandle, { dbDefault?: number | null
     if (hydrated) return;
     const local = readLocal();
     if (local !== undefined) setPref(local);
-    else if (dbDefault !== undefined) setPref(dbDefault ?? null);
+    else if (dbDefault !== undefined) setPref(dbDefault ? dbDefault : null);
     setHydrated(true);
   }, [dbDefault, hydrated]);
 
@@ -67,7 +67,7 @@ export const RestTimer = forwardRef<RestTimerHandle, { dbDefault?: number | null
     writeLocal(v);
     const { data: u } = await supabase.auth.getUser();
     if (u.user) {
-      await supabase.from("profiles").update({ rest_timer_seconds: v }).eq("id", u.user.id);
+      await supabase.from("profiles").update({ rest_timer_seconds: v ?? 0 }).eq("id", u.user.id);
     }
   }, []);
 
