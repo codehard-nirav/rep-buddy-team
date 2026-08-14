@@ -54,7 +54,23 @@ function WorkoutDetail() {
     refetchComments();
   }
 
-  if (!workout) return <div className="p-8">Loading…</div>;
+  if (isLoading) return <div className="p-8">Loading…</div>;
+  if (error)
+    return (
+      <div className="max-w-3xl mx-auto p-8">
+        <p className="font-semibold mb-2">Couldn't load this workout.</p>
+        <p className="text-sm text-muted-foreground mb-4">{(error as Error).message}</p>
+        <Link to="/history" className="text-primary underline">Back to history</Link>
+      </div>
+    );
+  if (!workout)
+    return (
+      <div className="max-w-3xl mx-auto p-8">
+        <p className="font-semibold mb-2">Workout not found.</p>
+        <Link to="/history" className="text-primary underline">Back to history</Link>
+      </div>
+    );
+
 
   const grouped: Record<string, any[]> = {};
   (workout.workout_sets ?? []).forEach((s: any) => {
