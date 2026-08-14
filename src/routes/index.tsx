@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Zap, Users, BarChart3, ArrowRight, Dumbbell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,6 +58,7 @@ export const Route = createFileRoute("/")({
 
 function Landing() {
   const nav = useNavigate();
+  const router = useRouter();
   const [handlingCallback] = useState(() =>
     typeof window !== "undefined" && window.location.hash.includes("access_token="),
   );
@@ -66,7 +67,7 @@ function Landing() {
 
     const go = async () => {
       if (cancelled) return;
-      await Route.router.invalidate();
+      await router.invalidate();
       if (!cancelled) nav({ to: "/dashboard", replace: true });
     };
 
@@ -97,7 +98,7 @@ function Landing() {
       cancelled = true;
       sub.subscription.unsubscribe();
     };
-  }, [nav]);
+  }, [nav, router]);
 
   if (handlingCallback) {
     return (

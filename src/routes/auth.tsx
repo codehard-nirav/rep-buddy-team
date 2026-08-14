@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouter, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +28,7 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const nav = useNavigate();
+  const router = useRouter();
   const search = useSearch({ from: "/auth" });
   const [mode, setMode] = useState<"signin" | "signup">(search.mode ?? "signin");
   const [email, setEmail] = useState("");
@@ -44,7 +45,7 @@ function AuthPage() {
       if (cancelled) return;
       setRedirecting(true);
       window.history.replaceState(null, "", window.location.pathname + window.location.search);
-      await Route.router.invalidate();
+      await router.invalidate();
       if (cancelled) return;
       nav({ to: search.redirect ?? "/dashboard", replace: true });
     };
@@ -90,7 +91,7 @@ function AuthPage() {
       cancelled = true;
       sub.subscription.unsubscribe();
     };
-  }, [nav, search.redirect]);
+  }, [nav, router, search.redirect]);
 
 
   async function handleResend() {
