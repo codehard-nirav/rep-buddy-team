@@ -149,16 +149,19 @@ export function AppShell({ children }: { children: ReactNode }) {
 
 function NavLink({ to, label, icon: Icon }: { to: string; label: string; icon: typeof Home }) {
   const router = useRouter();
+  const qc = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   function handleClick(e: React.MouseEvent<HTMLAnchorElement>) {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
     if (pathname !== to) return;
-    // Already here: re-run loaders, reset scroll, and give feedback.
+    // Already here: re-run loaders + refetch data, reset scroll.
     e.preventDefault();
     router.invalidate();
+    qc.invalidateQueries();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
+
 
   return (
     <Link
