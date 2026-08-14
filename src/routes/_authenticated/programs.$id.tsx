@@ -3,6 +3,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Plus, X } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/_authenticated/programs/$id")({
   component: ProgramDetail,
