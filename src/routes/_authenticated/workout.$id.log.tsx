@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Plus, X, Timer, Check, Trash2, Search } from "lucide-react";
 import { z } from "zod";
 import { useUnits } from "@/lib/use-units";
+import { RestTimer, type RestTimerHandle } from "@/components/RestTimer";
 
 const searchSchema = z.object({
   add: z.string().optional(),
@@ -67,6 +68,16 @@ function LogWorkout() {
   }, [sets]);
 
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [done, setDone] = useState<Record<string, boolean>>({});
+  const restRef = useRef<RestTimerHandle>(null);
+
+  function toggleDone(setId: string) {
+    setDone((d) => {
+      const next = !d[setId];
+      if (next) restRef.current?.start();
+      return { ...d, [setId]: next };
+    });
+  }
   const bootstrappedRef = useRef<string | null>(null);
 
   // Auto-add exercise from ?add= or routine load — run at most once per workout id.
@@ -234,19 +245,29 @@ function LogWorkout() {
                 Remove
               </button>
             </div>
-            <div className="grid grid-cols-[24px_1fr_1fr_1fr_24px] gap-1.5 items-center text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+            <div className="grid grid-cols-[24px_1fr_1fr_1fr_28px_24px] gap-1.5 items-center text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
               <span className="text-center">#</span>
               <span>Weight</span>
               <span>Reps</span>
               <span>RPE</span>
+              <span className="text-center">✓</span>
               <span />
             </div>
             {g.sets.map((s: any, i: number) => (
-              <div key={s.id} className="grid grid-cols-[24px_1fr_1fr_1fr_24px] gap-1.5 items-center py-0.5">
+              <div key={s.id} className="grid grid-cols-[24px_1fr_1fr_1fr_28px_24px] gap-1.5 items-center py-0.5">
                 <span className="text-center text-xs font-semibold">{i + 1}</span>
                 <NumInput value={s.weight} onCommit={(v) => updateSet(s.id, { weight: v })} placeholder={units} />
                 <NumInput value={s.reps} onCommit={(v) => updateSet(s.id, { reps: v })} placeholder="reps" />
                 <NumInput value={s.rpe} onCommit={(v) => updateSet(s.id, { rpe: v })} placeholder="RPE" step={0.5} />
+                <button
+                  onClick={() => toggleDone(s.id)}
+                  aria-label="Mark set complete"
+                  className={`h-7 w-7 grid place-items-center rounded-md border ${
+                    done[s.id] ? "bg-gradient-primary text-primary-foreground border-primary" : "border-input bg-background text-muted-foreground"
+                  }`}
+                >
+                  <Check className="w-3.5 h-3.5" />
+                </button>
                 <button onClick={() => deleteSet(s.id)} className="p-0.5 text-muted-foreground hover:text-destructive">
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -269,7 +290,7 @@ function LogWorkout() {
         <Plus className="w-5 h-5" /> Add exercise
       </button>
 
-      <RestTimer defaultSeconds={me?.restTimer ?? 90} />
+      <RestTimer ref={restRef} dbDefault={me?.restTimer} />
 
       {pickerOpen && (
         <ExercisePicker
@@ -298,31 +319,6 @@ function RunningTimer({ startedAt }: { startedAt?: string | null }) {
     <p className="text-sm text-muted-foreground flex items-center gap-1">
       <Timer className="w-3 h-3" /> {mm}m {String(ss).padStart(2, "0")}s
     </p>
-  );
-}
-
-function RestTimer({ defaultSeconds = 90 }: { defaultSeconds?: number }) {
-  const [remaining, setRemaining] = useState(0);
-  useEffect(() => {
-    if (remaining <= 0) return;
-    const t = setInterval(() => setRemaining((r) => r - 1), 1000);
-    return () => clearInterval(t);
-  }, [remaining]);
-  const presets = Array.from(new Set([defaultSeconds, 60, 90, 120, 180])).slice(0, 4);
-  return (
-    <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-10 flex gap-2">
-      {presets.map((s) => (
-        <button
-          key={s}
-          onClick={() => setRemaining(s)}
-          className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${
-            remaining > 0 && remaining <= s ? "bg-primary text-primary-foreground border-primary" : "bg-card/90 backdrop-blur border-border"
-          }`}
-        >
-          {remaining > 0 ? `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}` : `${s}s`}
-        </button>
-      ))}
-    </div>
   );
 }
 
