@@ -311,6 +311,33 @@ function LogWorkout() {
   );
 }
 
+function WorkoutNameInput({ value, onCommit }: { value: string; onCommit: (v: string) => void | Promise<void> }) {
+  const [v, setV] = useState(value);
+  const [focused, setFocused] = useState(false);
+  useEffect(() => {
+    if (!focused) setV(value);
+  }, [value, focused]);
+  return (
+    <input
+      value={v}
+      onChange={(e) => setV(e.target.value)}
+      onFocus={() => setFocused(true)}
+      onBlur={() => {
+        setFocused(false);
+        const trimmed = v.trim();
+        setV(trimmed);
+        if (trimmed !== value) void onCommit(trimmed);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+      }}
+      placeholder="Workout name"
+      aria-label="Workout name"
+      className="w-full bg-transparent text-2xl font-extrabold rounded-md px-1 -ml-1 border border-transparent hover:border-border focus:border-primary focus:outline-none"
+    />
+  );
+}
+
 function RunningTimer({ startedAt }: { startedAt?: string | null }) {
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
