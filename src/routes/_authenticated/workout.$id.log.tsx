@@ -213,8 +213,14 @@ function LogWorkout() {
   return (
     <div className="max-w-3xl mx-auto p-4 md:p-8 pb-32">
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-extrabold">{workout?.name ?? "Workout"}</h1>
+        <div className="min-w-0 flex-1 mr-2">
+          <WorkoutNameInput
+            value={workout?.name ?? ""}
+            onCommit={async (name) => {
+              await supabase.from("workouts").update({ name: name || null }).eq("id", id);
+              qc.invalidateQueries({ queryKey: ["workout", id] });
+            }}
+          />
           <RunningTimer startedAt={workout?.started_at} />
         </div>
         <div className="flex gap-2">
@@ -302,6 +308,33 @@ function LogWorkout() {
         />
       )}
     </div>
+  );
+}
+
+function WorkoutNameInput({ value, onCommit }: { value: string; onCommit: (v: string) => void | Promise<void> }) {
+  const [v, setV] = useState(value);
+  const [focused, setFocused] = useState(false);
+  useEffect(() => {
+    if (!focused) setV(value);
+  }, [value, focused]);
+  return (
+    <input
+      value={v}
+      onChange={(e) => setV(e.target.value)}
+      onFocus={() => setFocused(true)}
+      onBlur={() => {
+        setFocused(false);
+        const trimmed = v.trim();
+        setV(trimmed);
+        if (trimmed !== value) void onCommit(trimmed);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+      }}
+      placeholder="Workout name"
+      aria-label="Workout name"
+      className="w-full bg-transparent text-2xl font-extrabold rounded-md px-1 -ml-1 border border-transparent hover:border-border focus:border-primary focus:outline-none"
+    />
   );
 }
 
