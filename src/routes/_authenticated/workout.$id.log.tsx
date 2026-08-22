@@ -213,8 +213,14 @@ function LogWorkout() {
   return (
     <div className="max-w-3xl mx-auto p-4 md:p-8 pb-32">
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-extrabold">{workout?.name ?? "Workout"}</h1>
+        <div className="min-w-0 flex-1 mr-2">
+          <WorkoutNameInput
+            value={workout?.name ?? ""}
+            onCommit={async (name) => {
+              await supabase.from("workouts").update({ name: name || null }).eq("id", id);
+              qc.invalidateQueries({ queryKey: ["workout", id] });
+            }}
+          />
           <RunningTimer startedAt={workout?.started_at} />
         </div>
         <div className="flex gap-2">
