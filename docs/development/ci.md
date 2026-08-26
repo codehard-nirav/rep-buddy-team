@@ -9,16 +9,22 @@ Workflow: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)
 
 In-progress runs for the same PR are cancelled when a new commit is pushed.
 
-## Steps (all must pass)
-| Step | Command |
-|------|---------|
-| Install | `bun install --frozen-lockfile` |
-| Lint | `bun run lint` |
-| Typecheck | `bun run typecheck` (`tsc --noEmit`) |
-| Test | `bun run test` (`vitest run`) |
-| Build | `bun run build` |
+## Steps
+| Step | Command | Blocks merge |
+|------|---------|--------------|
+| Install | `bun install --frozen-lockfile` | yes |
+| Lint | `bun run lint` | no (advisory) |
+| Typecheck | `bun run typecheck` (`tsc --noEmit`) | yes |
+| Test | `bun run test` (`vitest run`) | yes |
+| Build | `bun run build` | yes |
 
-Any failing step fails the job, and the PR shows a red **Lint, typecheck, test, build** check.
+Lint is advisory because of a large pre-existing Prettier/`no-explicit-any`
+backlog (~1150 findings). Clear it with `bun run format` plus type fixes, then
+set `continue-on-error: false` on the Lint step so it blocks too.
+
+Any other failing step fails the job, and the PR shows a red
+**Lint, typecheck, test, build** check.
+
 
 Reproduce the whole pipeline locally with:
 
