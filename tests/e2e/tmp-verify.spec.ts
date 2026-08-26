@@ -18,7 +18,7 @@ test("verify authed selectors", async ({ page, context }) => {
   await page.getByRole("button", { name: /empty workout/i }).click();
   await page.waitForTimeout(5000);
   console.log("AFTER", page.url());
-  console.log("nameInput", await page.getByDisplayValue(/empty workout/i).count());
+  console.log("nameInput", await page.locator("input[value*='Empty' i]").count());
   console.log("finish", await page.getByRole("button", { name: /finish/i }).count());
   console.log("addset", await page.getByRole("button", { name: /add set/i }).count());
   console.log("quicklinks", await page.getByRole("link", { name: /view progress/i }).count());
