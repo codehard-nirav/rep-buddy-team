@@ -97,11 +97,48 @@ jobs:
           E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
           E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
 
-      - name: Upload Playwright report
+      - name: Upload Playwright HTML report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          name: playwright-report-${{ github.run_attempt }}
           path: playwright-report
           retention-days: 7
+          if-no-files-found: ignore
+
+      # Screenshots, videos and traces for failed tests only (Playwright writes
+      # them under test-results/<test>/ per the config's capture settings).
+      - name: Upload Playwright failure artifacts
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-failures-${{ github.run_attempt }}
+          path: |
+            test-results/**/*.png
+            test-results/**/*.webm
+            test-results/**/*.zip
+            test-results/**/*.md
+            test-results/**/error-context*
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Summarize failure artifacts
+        if: ${{ failure() }}
+        run: |
+          {
+            echo "### Playwright failure artifacts"
+            echo ""
+            echo "Download the \`playwright-failures-${{ github.run_attempt }}\` and \`playwright-report-${{ github.run_attempt }}\` artifacts from this run's summary page."
+            echo ""
+            echo "Traces (\`trace.zip\`) can be opened at https://trace.playwright.dev."
+            echo ""
+            if [ -d test-results ]; then
+              echo '```'
+              find test-results -type f \( -name '*.png' -o -name '*.webm' -o -name '*.zip' \) | sort
+              echo '```'
+            else
+              echo "_No failure artifacts were produced._"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
 
