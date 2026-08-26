@@ -19,7 +19,19 @@ export default defineConfig({
     screenshot: "only-on-failure",
     video: "retain-on-failure",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    {
+      name: "chromium",
+      use: {
+        ...devices["Desktop Chrome"],
+        // Optional escape hatch for environments with a pre-installed browser.
+        launchOptions: process.env.E2E_CHROMIUM_PATH
+          ? { executablePath: process.env.E2E_CHROMIUM_PATH }
+          : {},
+      },
+    },
+  ],
+
   // Reuse an already-running server locally; boot the dev server in CI.
   webServer: process.env.E2E_BASE_URL
     ? undefined
