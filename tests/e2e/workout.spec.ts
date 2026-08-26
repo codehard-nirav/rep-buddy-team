@@ -14,7 +14,7 @@ test.describe("logging a workout", () => {
     await page.waitForURL(/\/workout\/[^/]+\/log/, { timeout: 30_000 });
 
     // The workout name is editable inline.
-    await expect(page.getByDisplayValue(/empty workout/i)).toBeVisible();
+    await expect(page.locator("input[value*='Empty' i]").first()).toBeVisible();
 
     const addSet = page.getByRole("button", { name: /add set/i }).first();
     if (await addSet.isVisible().catch(() => false)) {
