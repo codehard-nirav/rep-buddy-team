@@ -33,5 +33,7 @@ Chase **coverage of critical paths**, not percentages:
 - Trivial getters.
 
 ## See Also
+- [`test-plan.md`](./test-plan.md) — master test plan: every page, every feature, with case IDs
 - [`../templates/test-template.md`](../templates/test-template.md)
 - [ADR-0010 Testing philosophy](../adr/0010-testing.md) *(planned)*
+
