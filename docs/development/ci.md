@@ -18,6 +18,9 @@ In-progress runs for the same PR are cancelled when a new commit is pushed.
 | Test | `bun run test` (`vitest run`) | yes |
 | Build | `bun run build` | yes |
 
+A second job, **Playwright smoke tests**, runs the end-to-end suite in parallel
+(see [`e2e.md`](./e2e.md)).
+
 Lint is advisory because of a large pre-existing Prettier/`no-explicit-any`
 backlog (~1150 findings). Clear it with `bun run format` plus type fixes, then
 set `continue-on-error: false` on the Lint step so it blocks too.
@@ -38,7 +41,7 @@ The workflow reports status; GitHub enforces it. In the repository:
 **Settings → Branches → Add branch ruleset** (or *Add rule*) for `main`:
 1. Enable **Require a pull request before merging**.
 2. Enable **Require status checks to pass before merging**.
-3. Search for and select the check named **`Lint, typecheck, test, build`**.
+3. Search for and select the checks named **`Lint, typecheck, test, build`** and **`Playwright smoke tests`**.
 4. Enable **Require branches to be up to date before merging**.
 5. Save. Optionally enable **Do not allow bypassing the above settings** so admins are covered too.
 
