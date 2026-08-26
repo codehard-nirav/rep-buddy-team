@@ -60,8 +60,20 @@ has one installed.
 
 ## Failure artifacts
 
-Traces (on first retry), screenshots, and video are captured for failures, and
-the HTML report is uploaded as the `playwright-report` artifact on every run.
+Every failing test retains a screenshot, a video (`.webm`) and a trace
+(`trace.zip`) under `test-results/<test-name>/`. Passing tests keep nothing.
+
+In CI:
+
+- `playwright-report-<attempt>` — HTML report + `junit.xml`, uploaded on every run.
+- `playwright-failures-<attempt>` — screenshots, videos, traces and error
+  context, uploaded only when the job fails (14-day retention).
+- The job summary lists the captured files and links to
+  [trace.playwright.dev](https://trace.playwright.dev) for opening `trace.zip`.
+
+Locally, inspect the same data with `bunx playwright show-report` or
+`bunx playwright show-trace test-results/<test>/trace.zip`.
+
 
 ## See also
 
