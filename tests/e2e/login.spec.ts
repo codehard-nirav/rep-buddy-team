@@ -8,7 +8,7 @@ test.describe("login", () => {
     await page.goto("/auth");
     await page.getByLabel("Email address").fill("not-a-real-user@example.com");
     await page.getByLabel("Password", { exact: true }).fill("definitely-wrong-password");
-    await page.getByRole("button", { name: /sign in|log in/i }).click();
+    await page.locator("form").getByRole("button", { name: /^sign in$/i }).click();
 
     await expect(page.getByText(/couldn't sign you in|invalid/i).first()).toBeVisible();
     await expect(page).toHaveURL(/\/auth/);

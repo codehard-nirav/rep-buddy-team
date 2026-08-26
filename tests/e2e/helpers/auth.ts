@@ -15,7 +15,7 @@ export async function signIn(page: Page) {
 
   await page.getByLabel("Email address").fill(E2E_EMAIL);
   await page.getByLabel("Password", { exact: true }).fill(E2E_PASSWORD);
-  await page.getByRole("button", { name: /sign in|log in/i }).click();
+  await page.locator("form").getByRole("button", { name: /^sign in$/i }).click();
 
   await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 30_000 });
 
