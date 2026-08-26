@@ -1,0 +1,113 @@
+name: Nightly E2E regression
+
+on:
+  schedule:
+    # 02:30 UTC every day (08:00 IST).
+    - cron: "30 2 * * *"
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Optional URL to test against instead of a locally booted dev server"
+        required: false
+        type: string
+
+concurrency:
+  group: nightly-e2e-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  nightly:
+    name: Full Playwright suite (non-blocking)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    # Informational only: a red nightly never blocks merges or releases.
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install Playwright browser
+        run: bunx playwright install --with-deps chromium
+
+      - name: Check test account configuration
+        run: |
+          if [ -z "${{ secrets.E2E_TEST_EMAIL }}" ] || [ -z "${{ secrets.E2E_TEST_PASSWORD }}" ]; then
+            echo "::warning::E2E_TEST_EMAIL / E2E_TEST_PASSWORD are not set — authenticated specs will skip."
+          fi
+
+      # Runs every spec: public + authenticated (login, workout logging, progress).
+      - name: Run full Playwright suite
+        id: e2e
+        run: bun run test:e2e
+        env:
+          CI: "true"
+          E2E_BASE_URL: ${{ inputs.base_url }}
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY || secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_SUPABASE_PROJECT_ID: ${{ vars.VITE_SUPABASE_PROJECT_ID || secrets.VITE_SUPABASE_PROJECT_ID }}
+          E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
+          E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+
+      - name: Upload Playwright HTML report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-playwright-report-${{ github.run_id }}
+          path: playwright-report
+          retention-days: 14
+          if-no-files-found: ignore
+
+      # Screenshots, videos and traces for failed specs only.
+      - name: Upload Playwright failure artifacts
+        if: ${{ steps.e2e.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-playwright-failures-${{ github.run_id }}
+          path: |
+            test-results/**/*.png
+            test-results/**/*.webm
+            test-results/**/*.zip
+            test-results/**/*.md
+            test-results/**/error-context*
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Summarize run
+        if: ${{ !cancelled() }}
+        run: |
+          {
+            echo "### Nightly Playwright regression"
+            echo ""
+            echo "Result: \`${{ steps.e2e.outcome }}\` (non-blocking)"
+            echo ""
+            if [ "${{ steps.e2e.outcome }}" = "failure" ]; then
+              echo "Download \`nightly-playwright-failures-${{ github.run_id }}\` for screenshots, videos and traces."
+              echo "Open \`trace.zip\` at https://trace.playwright.dev."
+              echo ""
+              if [ -d test-results ]; then
+                echo '```'
+                find test-results -type f \( -name '*.png' -o -name '*.webm' -o -name '*.zip' \) | sort
+                echo '```'
+              fi
+            else
+              echo "All specs passed (authenticated specs skip when no test account secrets are configured)."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

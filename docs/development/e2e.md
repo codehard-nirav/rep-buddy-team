@@ -74,6 +74,22 @@ In CI:
 Locally, inspect the same data with `bunx playwright show-report` or
 `bunx playwright show-trace test-results/<test>/trace.zip`.
 
+## Nightly regression
+
+`.github/workflows/nightly-e2e.yml` runs the full suite (public +
+authenticated) every day at 02:30 UTC / 08:00 IST, and on manual dispatch with
+an optional `base_url` input to point at a deployed environment.
+
+- Non-blocking: the job is `continue-on-error`, so a red nightly never blocks
+  PRs or releases — it is a signal to triage.
+- Artifacts: `nightly-playwright-report-<run_id>` always, and
+  `nightly-playwright-failures-<run_id>` (screenshots, videos, traces) for 30
+  days when specs fail.
+- Without `E2E_TEST_EMAIL` / `E2E_TEST_PASSWORD` secrets the authenticated
+  specs skip and the run logs a warning.
+
+
+
 
 ## See also
 
