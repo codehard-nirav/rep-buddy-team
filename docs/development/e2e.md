@@ -95,3 +95,11 @@ an optional `base_url` input to point at a deployed environment.
 
 - [CI pipeline](./ci.md)
 - [Manual test plan](../testing/test-plan.md)
+
+## Retries, quarantine, sharding, browsers
+
+- **Retries**: CI retries failing tests twice (`E2E_RETRIES` overrides). Tests that pass on retry are reported as *flaky* in the summary.
+- **Quarantine**: add `@quarantine` to a consistently failing test's title. It is excluded from PR and nightly runs and executed in a separate non-blocking "Quarantined specs" job (`E2E_QUARANTINE=only|include|exclude`). Remove the tag once fixed.
+- **Sharding**: nightly runs each browser in 3 parallel shards; blob reports are merged into one HTML report.
+- **Browsers**: nightly covers Chromium, Firefox and WebKit; PR CI runs Chromium only. Failure artifacts are uploaded per browser/shard.
+- **Slack**: add a repository secret `SLACK_WEBHOOK_URL` (Slack incoming webhook). A failed nightly posts a message linking to the run and its artifacts.

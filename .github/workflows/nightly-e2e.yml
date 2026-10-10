@@ -18,69 +18,64 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  CI: "true"
+  E2E_BASE_URL: ${{ inputs.base_url }}
+  E2E_RETRIES: "2"
+  VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || secrets.VITE_SUPABASE_URL }}
+  VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY || secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+  VITE_SUPABASE_PROJECT_ID: ${{ vars.VITE_SUPABASE_PROJECT_ID || secrets.VITE_SUPABASE_PROJECT_ID }}
+  E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
+  E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+
 jobs:
   nightly:
-    name: Full Playwright suite (non-blocking)
+    name: ${{ matrix.browser }} shard ${{ matrix.shard }}/3
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    # Informational only: a red nightly never blocks merges or releases.
-    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+        shard: [1, 2, 3]
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-
-      - name: Cache dependencies
-        uses: actions/cache@v4
+      - uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
+      - run: bun install --frozen-lockfile
       - name: Install Playwright browser
-        run: bunx playwright install --with-deps chromium
+        run: bunx playwright install --with-deps ${{ matrix.browser }}
 
       - name: Check test account configuration
+        if: ${{ matrix.shard == 1 && matrix.browser == 'chromium' }}
         run: |
-          if [ -z "${{ secrets.E2E_TEST_EMAIL }}" ] || [ -z "${{ secrets.E2E_TEST_PASSWORD }}" ]; then
+          if [ -z "$E2E_TEST_EMAIL" ] || [ -z "$E2E_TEST_PASSWORD" ]; then
             echo "::warning::E2E_TEST_EMAIL / E2E_TEST_PASSWORD are not set — authenticated specs will skip."
           fi
 
-      # Runs every spec: public + authenticated (login, workout logging, progress).
-      - name: Run full Playwright suite
-        id: e2e
-        run: bun run test:e2e
-        env:
-          CI: "true"
-          E2E_BASE_URL: ${{ inputs.base_url }}
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY || secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-          VITE_SUPABASE_PROJECT_ID: ${{ vars.VITE_SUPABASE_PROJECT_ID || secrets.VITE_SUPABASE_PROJECT_ID }}
-          E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
-          E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+      - name: Run Playwright shard
+        run: bunx playwright test --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/3
 
-      - name: Upload Playwright HTML report
+      - name: Upload blob report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: nightly-playwright-report-${{ github.run_id }}
-          path: playwright-report
-          retention-days: 14
+          name: blob-${{ matrix.browser }}-${{ matrix.shard }}
+          path: blob-report
+          retention-days: 3
           if-no-files-found: ignore
 
-      # Screenshots, videos and traces for failed specs only.
-      - name: Upload Playwright failure artifacts
-        if: ${{ steps.e2e.outcome == 'failure' }}
+      - name: Upload failure artifacts
+        if: ${{ failure() }}
         uses: actions/upload-artifact@v4
         with:
-          name: nightly-playwright-failures-${{ github.run_id }}
+          name: nightly-failures-${{ matrix.browser }}-shard${{ matrix.shard }}-${{ github.run_id }}
           path: |
             test-results/**/*.png
             test-results/**/*.webm
@@ -90,24 +85,75 @@ jobs:
           retention-days: 30
           if-no-files-found: ignore
 
-      - name: Summarize run
-        if: ${{ !cancelled() }}
+  quarantine:
+    name: Quarantined specs (informational)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true
+    env:
+      E2E_QUARANTINE: only
+      E2E_RETRIES: "0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - run: bunx playwright install --with-deps chromium
+      - name: Run quarantined tests
+        run: bunx playwright test --project=chromium --pass-with-no-tests
+
+  report:
+    name: Merge reports & notify
+    needs: [nightly]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - uses: actions/download-artifact@v4
+        with:
+          path: all-blob-reports
+          pattern: blob-*
+          merge-multiple: true
+      - name: Merge shard reports
         run: |
+          if [ -d all-blob-reports ] && [ "$(ls -A all-blob-reports)" ]; then
+            bunx playwright merge-reports --reporter html,json all-blob-reports > merged.json || true
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nightly-playwright-report-${{ github.run_id }}
+          path: playwright-report
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Summarize run
+        run: |
+          FLAKY=$(node -e "try{const r=require('./merged.json');console.log(r.stats?.flaky??0)}catch{console.log('?')}")
           {
             echo "### Nightly Playwright regression"
             echo ""
-            echo "Result: \`${{ steps.e2e.outcome }}\` (non-blocking)"
+            echo "Result: \`${{ needs.nightly.result }}\` across chromium / firefox / webkit (3 shards each)"
+            echo "Flaky (passed on retry): $FLAKY"
             echo ""
-            if [ "${{ steps.e2e.outcome }}" = "failure" ]; then
-              echo "Download \`nightly-playwright-failures-${{ github.run_id }}\` for screenshots, videos and traces."
-              echo "Open \`trace.zip\` at https://trace.playwright.dev."
-              echo ""
-              if [ -d test-results ]; then
-                echo '```'
-                find test-results -type f \( -name '*.png' -o -name '*.webm' -o -name '*.zip' \) | sort
-                echo '```'
-              fi
-            else
-              echo "All specs passed (authenticated specs skip when no test account secrets are configured)."
-            fi
+            echo "Per-browser failure artifacts: \`nightly-failures-<browser>-shard<n>-${{ github.run_id }}\`. Open \`trace.zip\` at https://trace.playwright.dev."
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Notify Slack on failure
+        if: ${{ needs.nightly.result == 'failure' }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "::warning::SLACK_WEBHOOK_URL not set — skipping Slack notification."; exit 0
+          fi
+          payload=$(cat <<EOF
+          {"text":":red_circle: *Gymigo nightly Playwright regression failed* on \`${{ github.ref_name }}\`\n<${RUN_URL}|View run & download artifacts> (report, per-browser screenshots/videos/traces)"}
+          EOF
+          )
+          curl -sS -X POST -H 'Content-type: application/json' --data "$payload" "$SLACK_WEBHOOK_URL"

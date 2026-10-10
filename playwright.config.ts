@@ -3,6 +3,22 @@ import { defineConfig, devices } from "@playwright/test";
 const PORT = Number(process.env.E2E_PORT ?? 4173);
 const baseURL = process.env.E2E_BASE_URL ?? `http://localhost:${PORT}`;
 
+// Quarantine: tag a consistently failing test with "@quarantine" in its title
+// (e.g. test("does X @quarantine", ...)). Quarantined tests are excluded from
+// normal runs and executed separately (non-blocking) when E2E_QUARANTINE=only.
+const quarantineMode = process.env.E2E_QUARANTINE ?? "exclude"; // exclude | only | include
+const QUARANTINE = /@quarantine/;
+
+const retries = process.env.E2E_RETRIES
+  ? Number(process.env.E2E_RETRIES)
+  : process.env.CI
+    ? 2
+    : 0;
+
+const chromiumLaunch = process.env.E2E_CHROMIUM_PATH
+  ? { executablePath: process.env.E2E_CHROMIUM_PATH }
+  : {};
+
 export default defineConfig({
   testDir: "./tests/e2e",
   testMatch: /.*\.spec\.ts/,
@@ -10,15 +26,20 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  // Flaky tests get retried; a test that passes on retry is reported "flaky".
+  retries,
+  workers: process.env.E2E_WORKERS ? Number(process.env.E2E_WORKERS) : process.env.CI ? 2 : undefined,
+  grep: quarantineMode === "only" ? QUARANTINE : undefined,
+  grepInvert: quarantineMode === "exclude" ? QUARANTINE : undefined,
   outputDir: "test-results",
   reporter: process.env.CI
     ? [
         ["github"],
         ["list"],
+        ["blob", { outputDir: "blob-report" }],
         ["html", { open: "never", outputFolder: "playwright-report" }],
         ["junit", { outputFile: "playwright-report/junit.xml" }],
+        ["json", { outputFile: "playwright-report/results.json" }],
       ]
     : [["list"], ["html", { open: "never", outputFolder: "playwright-report" }]],
   use: {
@@ -29,19 +50,11 @@ export default defineConfig({
   },
 
   projects: [
-    {
-      name: "chromium",
-      use: {
-        ...devices["Desktop Chrome"],
-        // Optional escape hatch for environments with a pre-installed browser.
-        launchOptions: process.env.E2E_CHROMIUM_PATH
-          ? { executablePath: process.env.E2E_CHROMIUM_PATH }
-          : {},
-      },
-    },
+    { name: "chromium", use: { ...devices["Desktop Chrome"], launchOptions: chromiumLaunch } },
+    { name: "firefox", use: { ...devices["Desktop Firefox"] } },
+    { name: "webkit", use: { ...devices["Desktop Safari"] } },
   ],
 
-  // Reuse an already-running server locally; boot the dev server in CI.
   webServer: process.env.E2E_BASE_URL
     ? undefined
     : {
