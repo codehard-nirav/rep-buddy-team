@@ -1,7 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const PORT = Number(process.env.E2E_PORT ?? 4173);
-const baseURL = process.env.E2E_BASE_URL ?? `http://localhost:${PORT}`;
+const configuredBaseURL = process.env.E2E_BASE_URL?.trim();
+const baseURL = configuredBaseURL || `http://localhost:${PORT}`;
 
 // Quarantine: tag a consistently failing test with "@quarantine" in its title
 // (e.g. test("does X @quarantine", ...)). Quarantined tests are excluded from
@@ -55,7 +56,7 @@ export default defineConfig({
     { name: "webkit", use: { ...devices["Desktop Safari"] } },
   ],
 
-  webServer: process.env.E2E_BASE_URL
+  webServer: configuredBaseURL
     ? undefined
     : {
         command: `bun run dev --port ${PORT} --host 127.0.0.1`,
