@@ -84,12 +84,18 @@ function AuthPage() {
       toast.error(error instanceof Error ? error.message : "Google sign-in failed");
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) void go();
-    });
+    let unsub: (() => void) | undefined;
+    try {
+      const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (session) void go();
+      });
+      unsub = () => sub.subscription.unsubscribe();
+    } catch {
+      // Supabase client not configured; completeCallback's catch already cleared the spinner.
+    }
     return () => {
       cancelled = true;
-      sub.subscription.unsubscribe();
+      unsub?.();
     };
   }, [nav, router, search.redirect]);
 
